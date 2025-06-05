@@ -1,0 +1,56 @@
+/* 🎨 Paleta de colores */
+
+  /* Navbar */
+  .custom-navbar {
+    background: linear-gradient(to right, #33fff9, #334eff);
+    padding: 10px 20px;
+    border-bottom: 1px solid var(--blnaco);
+  }
+  
+  /* Logo */
+  .logo {
+    height: 50px;
+    max-width: 100%;
+  }
+  
+  /* Estilos del menú */
+  .navbar-nav .nav-link {
+    color: var(--gris) !important;
+    font-size: 18px;
+    font-weight: 500;
+    margin-right: 20px;
+    transition: color 0.3s ease-in-out;
+  }
+  
+  .navbar-nav .nav-link:hover {
+    color: var(--blanco) !important;
+    
+  }
+  
+  /* Botón de Iniciar Sesión */
+  .btn-login {
+    background-color: var(--azul-claro);
+    color: var(--blanco);
+    font-weight: bold;
+    padding: 8px 15px;
+    border-radius: 8px;
+    text-decoration: none;
+    transition: background 0.3s ease-in-out, color 0.3s ease-in-out;
+  }
+  
+  .btn-login:hover {
+    background-color: var(--azul-cielo);
+    color: var();
+    /* border: 2px solid var(--azul-claro); */
+  }
+  
+  /* Separación del navbar */
+  .container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  body {
+    background-color: red !important;
+  }
+  

@@ -1,0 +1,44 @@
+
+  .sidebar-toggle {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    z-index: 1050;
+    background-color: rgb(106, 205, 39);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 12px;
+    font-size: 1.25rem;
+
+}
+  /* Contenedor del contenido */
+.main-content {
+  min-height: 100vh;
+  padding: 2rem 1rem;
+  margin-left: 0; /* No desplazamos nada, la sidebar se superpone */
+}
+
+  
+  /* Barra lateral
+  .sidebar {
+    width: 250px; Ancho de la barra
+
+    position: sticky;
+    top: auto; Igual que la altura del header
+    height: calc(150vh - 60px - 60px); 100vh - header - footer
+    overflow-y: auto; Scroll si el contenido es largo
+    flex-shrink: 0; Evita que se encoja
+    padding: 1px 0;
+  } */
+  
+@media (min-width: 992px) {
+  .sidebar-toggle {
+    display: none;
+    
+  }
+  .main-content {
+    padding-left: 280px; /* Espacio para la sidebar en desktop, si la dejas fija */
+    transition: padding-left 0.3s;
+  }
+}

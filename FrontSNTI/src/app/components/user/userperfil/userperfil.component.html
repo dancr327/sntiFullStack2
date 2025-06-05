@@ -1,0 +1,51 @@
+
+<div class="perfil-container">
+    <h1 class="titulo">Perfil</h1>
+  
+    <img
+      class="foto-perfil"
+      src="https://randomuser.me/api/portraits/men/32.jpg"
+      alt="Foto de perfil"
+    />
+  
+    <form [formGroup]="perfilForm" class="perfil-formulario">
+      <div class="campo">
+        <label>Nombre:</label>
+        <input type="text" formControlName="nombre" />
+      </div>
+  
+      <div class="campo">
+        <label>Fecha de Nacimiento:</label>
+        <input type="date" formControlName="fechaNacimiento" />
+      </div>
+  
+      <div class="campo">
+        <label>Apellido Paterno:</label>
+        <input type="text" formControlName="apellidoPaterno" />
+      </div>
+  
+      <div class="campo">
+        <label>RFC:</label>
+        <input type="text" formControlName="rfc" />
+      </div>
+  
+      <div class="campo">
+        <label>Apellido Materno:</label>
+        <input type="text" formControlName="apellidoMaterno" />
+      </div>
+  
+      <div class="campo">
+        <label>CURP:</label>
+        <input type="text" formControlName="curp" />
+      </div>
+    </form>
+  
+    <button class="boton" (click)="toggleEdit()">
+      Solicitar Modificación
+    </button>
+    <div class="espaciador">
+    <button class="boton" [routerLink]="['/perfil-admin']">
+      Ver version de administrador
+    </button>
+  </div>
+  </div>

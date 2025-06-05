@@ -1,0 +1,80 @@
+<div class="login-container">
+  <div class="login-left">
+  
+    <img
+      src="assets/images/logosin.png"
+      alt="Logo del sitio"
+      class="site-logo"
+    />
+  </div>
+
+  <div class="login-right">
+    <h2 class="login-title">Iniciar sesión</h2>
+    <form [formGroup]="formLogin">
+      <label for="email">Correo electrónico</label>
+      <input
+        type="email"
+        id="email"
+        formControlName="email"
+        placeholder="correo@ejemplo.com"
+      />
+      <div *ngIf="email.invalid && (email.dirty || email.touched)">
+        <span *ngIf="email.errors?.['required']">*El email es obligatorio</span>
+        <span *ngIf="email.errors?.['pattern']">*El email debe ser valido</span>
+      </div>
+
+      <label for="curp">CURP</label>
+      <input
+        type="text"
+        id="curp"
+        formControlName="curp"
+        placeholder="RACW050729MMCSHNA2"
+        maxlength="18"
+        minlength="18"
+        (input)="toUppercase('curp', $event)"
+      />
+      <small *ngIf="curp.errors?.['required'] && curp.touched">
+        *La CURP es obligatoria.
+      </small>
+      <small *ngIf="curp.errors?.['pattern'] && curp.touched" class="error">
+        *La CURP no es válida.
+      </small>
+      <label for="password">Contraseña</label>
+      <input
+        type="password"
+        id="password"
+        formControlName="password"
+        placeholder="••••••••"
+      />
+      <small
+        *ngIf="password.errors?.['required'] && password.touched"
+        class="error"
+      >
+        *La contraseña es obligatoria.
+      </small>
+      <small
+        *ngIf="password.errors?.['minlength'] && password.touched"
+        class="error"
+      >
+        *La contraseña esta incompleta (min 8 caracteres).
+      </small>
+      <button
+        type="submit"
+        [disabled]="formLogin.invalid"
+        [ngClass]="{
+          'btn-valido': formLogin.valid,
+          'btn-invalido': formLogin.invalid
+        }"
+      >
+        Entrar
+      </button>
+
+      <label class="label-center">
+        ¿Olvidaste tu contraseña?
+        <a [routerLink]="['/recuperaPassword']" class="label-link"
+          >recupera aquí</a
+        >
+      </label>
+    </form>
+  </div>
+</div>

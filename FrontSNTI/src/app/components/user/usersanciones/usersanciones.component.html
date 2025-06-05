@@ -1,0 +1,131 @@
+<div class="app-container">
+
+    
+  <div class="main-content-wrapper">
+<div class="container mt-5">
+    <div class="card shadow">
+      <div class="card-header bg-purple text-white">
+        <h3 class="mb-0">Mis Sanciones</h3>
+      </div>
+      <div class="card-body">
+        <!-- Filtros -->
+        <div class="row mb-4">
+          <div class="col-md-6">
+            <label for="filtroEstatus" class="form-label">Filtrar por estatus:</label>
+            <select id="filtroEstatus" class="form-select" [(ngModel)]="filtroEstatus" (change)="filtrarSanciones()">
+              <option value="Todas">Todas</option>
+              <option value="Activa">Activas</option>
+              <option value="Finalizada">Finalizadas</option>
+            </select>
+          </div>
+          <div class="col-md-6 d-flex align-items-end">
+            <button class="btn btn-purple" (click)="recargarSanciones()">
+              <i class="bi bi-arrow-clockwise"></i> Recargar
+            </button>
+          </div>
+        </div>
+  
+        <!-- Listado de sanciones -->
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead class="table-purple">
+              <tr>
+                <th>Tipo</th>
+                <th>Descripción</th>
+                <th>Fecha Aplicación</th>
+                <th>Fecha Fin</th>
+                <th>Estatus</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let sancion of sancionesFiltradas">
+                <td>{{ sancion.tipo_sancion }}</td>
+                <td>{{ sancion.descripcion }}</td>
+                <td>{{ sancion.fecha_aplicacion | date:'dd/MM/yyyy' }}</td>
+                <td>{{ sancion.fecha_fin | date:'dd/MM/yyyy' }}</td>
+                <td>
+                  <span [class.badge-active]="sancion.estatus === 'Activa'" 
+                        [class.badge-inactive]="sancion.estatus === 'Finalizada'" 
+                        class="badge">
+                    {{ sancion.estatus }}
+                  </span>
+                </td>
+                <td>
+                  <button class="btn btn-sm btn-outline-purple" (click)="verDetalles(sancion)">
+                    <i class="bi bi-eye-fill"></i> Detalles
+                  </button>
+                </td>
+              </tr>
+              <tr *ngIf="sancionesFiltradas.length === 0">
+                <td colspan="6" class="text-center">No se encontraron sanciones</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+  
+        <!-- Paginación -->
+        <div class="d-flex justify-content-between align-items-center mt-3">
+          <div>
+            Mostrando {{ sancionesFiltradas.length }} de {{ sanciones.length }} sanciones
+          </div>
+          <div>
+            <button class="btn btn-sm btn-purple" [disabled]="paginaActual === 1" (click)="paginaAnterior()">
+              <i class="bi bi-chevron-left"></i> Anterior
+            </button>
+            <span class="mx-2">Página {{ paginaActual }}</span>
+            <button class="btn btn-sm btn-purple" [disabled]="sancionesFiltradas.length < itemsPorPagina" (click)="paginaSiguiente()">
+              Siguiente <i class="bi bi-chevron-right"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Modal de detalles -->
+  <div class="modal fade" id="detalleSancionModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header bg-purple text-white">
+          <h5 class="modal-title">Detalles de Sanción</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" *ngIf="sancionSeleccionada">
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <strong>Tipo:</strong> {{ sancionSeleccionada.tipo_sancion }}
+            </div>
+            <div class="col-md-6">
+              <strong>Estatus:</strong> 
+              <span [class.badge-active]="sancionSeleccionada.estatus === 'Activa'" 
+                    [class.badge-inactive]="sancionSeleccionada.estatus === 'Finalizada'" 
+                    class="badge">
+                {{ sancionSeleccionada.estatus }}
+              </span>
+            </div>
+          </div>
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <strong>Fecha Aplicación:</strong> {{ sancionSeleccionada.fecha_aplicacion | date:'dd/MM/yyyy' }}
+            </div>
+            <div class="col-md-6">
+              <strong>Fecha Fin:</strong> {{ sancionSeleccionada.fecha_fin | date:'dd/MM/yyyy'  }}
+            </div>
+          </div>
+          <div class="mb-3">
+            <strong>Descripción:</strong>
+            <p class="mt-2">{{ sancionSeleccionada.descripcion }}</p>
+          </div>
+          <div class="mb-3">
+            <strong>Registrada por:</strong> {{ sancionSeleccionada.usuario_registro }}
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-purple" data-bs-dismiss="modal">Cerrar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div>
+</div>

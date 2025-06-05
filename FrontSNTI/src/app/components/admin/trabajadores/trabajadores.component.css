@@ -1,0 +1,38 @@
+/* Puedes personalizar aún más el diseño aquí */
+.card {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.table th {
+  background-color: #0dadfd;
+  color: white;
+}
+
+.btn-primary {
+  background-color: #0dadfd;
+  border-color:#0dadfd;
+}
+
+.btn-primary:hover {
+  background-color: #0dadfd;
+  border-color:#0dadfd;
+}
+    
+  /* Contenedor del contenido */
+  .main-content-wrapper {
+    display: flex;
+    flex: 1; /* Ocupa todo el espacio disponible */
+  }
+  
+  /* Barra lateral */
+  .sidebar {
+    width: 250px; /* Ancho de la barra */
+
+    position: sticky;
+    top: auto; /* Igual que la altura del header */
+    height: calc(150vh - 60px - 60px); /* 100vh - header - footer */
+    overflow-y: auto; /* Scroll si el contenido es largo */
+    flex-shrink: 0; /* Evita que se encoja */
+    padding: 1px 0;
+  }
+  

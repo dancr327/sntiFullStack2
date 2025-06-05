@@ -1,0 +1,60 @@
+/* Colores azules claros */
+.bg-light-blue {
+  background-color: #74c0fc !important;
+}
+
+.btn-light-blue {
+  background-color: #74c0fc;
+  border-color: #74c0fc;
+  color: white;
+}
+
+.btn-light-blue:hover {
+  background-color: #4dabf7;
+  border-color: #4dabf7;
+  color: white;
+}
+
+/* Estilos adicionales */
+.table-hover tbody tr:hover {
+  background-color: rgba(116, 192, 252, 0.1);
+}
+
+.modal-content {
+  border: none;
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.card {
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.badge.bg-warning {
+  background-color: #ffc107 !important;
+  color: #212529;
+}
+
+.badge.bg-success {
+  background-color: #198754 !important;
+}
+    
+  /* Contenedor del contenido */
+  .main-content-wrapper {
+    display: flex;
+    flex: 1; /* Ocupa todo el espacio disponible */
+  }
+  
+  /* Barra lateral */
+  .sidebar {
+    width: 250px; /* Ancho de la barra */
+
+    position: sticky;
+    top: auto; /* Igual que la altura del header */
+    height: calc(150vh - 60px - 60px); /* 100vh - header - footer */
+    overflow-y: auto; /* Scroll si el contenido es largo */
+    flex-shrink: 0; /* Evita que se encoja */
+    padding: 1px 0;
+  }
+  

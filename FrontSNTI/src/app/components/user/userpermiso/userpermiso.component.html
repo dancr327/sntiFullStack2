@@ -1,0 +1,79 @@
+
+<div class="app-container">
+
+    
+    <div class="main-content-wrapper">
+      
+
+<div class="container mt-5">
+    <div class="card shadow">
+      <div class="card-header bg-purple text-white">
+        <h3 class="mb-0">Solicitar Nuevo Permiso</h3>
+      </div>
+      <div class="card-body">
+        <form (ngSubmit)="solicitarPermiso()" #permisoForm="ngForm">
+          <!-- ID Trabajador -->
+          <div class="mb-3">
+            <label for="idTrabajador" class="form-label">Nombre</label>
+            <input type="text" class="form-control" id="idTrabajador" 
+                   [(ngModel)]="permiso.id_trabajador" name="id_trabajador" required>
+          </div>
+  
+          <!-- Tipo Permiso -->
+          <div class="mb-3">
+            <label for="tipoPermiso" class="form-label">Tipo de Permiso</label>
+            <select class="form-select" id="tipoPermiso" 
+                    [(ngModel)]="permiso.tipo_permiso" name="tipo_permiso" required>
+              <option value="">Seleccione un tipo</option>
+              <option value="Personal">Personal</option>
+              <option value="Médico">Médico</option>
+              <option value="Familiar">Familiar</option>
+              <option value="Otro">Otro</option>
+            </select>
+          </div>
+  
+          <!-- Fechas -->
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label for="fechaInicio" class="form-label">Fecha Inicio</label>
+              <input type="date" class="form-control" id="fechaInicio" 
+                      name="fecha_inicio" required>
+                     <!-- <input type="date" class="form-control" id="fechaInicio" 
+                     [(ngModel)]="permiso.fecha_inicio" name="fecha_inicio" required> -->
+            </div>
+            <div class="col-md-6">
+              <label for="fechaFin" class="form-label">Fecha Fin</label>
+              <input type="date" class="form-control" id="fechaFin" 
+                      name="fecha_fin" required>
+                     <!-- <input type="date" class="form-control" id="fechaFin" 
+                     [(ngModel)]="permiso.fecha_fin" name="fecha_fin" required> -->
+            </div>
+          </div>
+  
+          <!-- Motivo -->
+          <div class="mb-3">
+            <label for="motivo" class="form-label">Motivo</label>
+            <textarea class="form-control" id="motivo" rows="3" 
+                      name="motivo" required></textarea>
+                      <!-- <textarea class="form-control" id="motivo" rows="3" 
+                      [(ngModel)]="permiso.motivo" name="motivo" required></textarea> -->
+          </div>
+  
+          <!-- Documento Aprobación -->
+
+  
+          <!-- Botones -->
+          <div class="d-flex justify-content-end gap-2">
+            <button type="button" class="btn btn-outline-secondary" (click)="cancelar()">
+              Cancelar
+            </button>
+            <button type="submit" class="btn btn-purple" [disabled]="!permisoForm.valid">
+              Solicitar Permiso
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+</div>

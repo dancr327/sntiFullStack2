@@ -1,0 +1,417 @@
+<div class="card">
+  <div class="card-body">
+    <!-- Formulario bonito -->
+
+    <div class="registro-container">
+      <!-- <p>CURP required: {{curp.errors?.['required']}}</p>
+      <p>CURP: {{ curp.value }}</p> -->
+
+      <h2 class="registro-title">Registro de Trabajador</h2>
+
+      <form
+        class="registro-form"
+        [formGroup]="formEmpleado"
+        (ngSubmit)="mostarDatos()"
+        (ngSubmit)="onSubmit()"
+      >
+        <!-- Nombre completo -->
+        <div class="form-group">
+          <label>*Nombre</label>
+          <!-- En la etiqueta input con formControlName hago la conexion del input con la variable de ts  -->
+          <input type="text" id="nombre" formControlName="nombre" />
+          <!-- Validación: solo muestra errores si el campo fue tocado y no es válido -->
+          <small *ngIf="nombre.invalid && nombre.touched" class="error">
+            *El nombre es obligatorio.
+          </small>
+        </div>
+        <div class="form-group">
+          <label>*Apellido Paterno</label>
+          <input
+            type="text"
+            id="apellidoPaterno"
+            formControlName="apellido_paterno"
+          />
+          <small
+            *ngIf="apellido_paterno.invalid && apellido_paterno.touched"
+            class="error"
+          >
+            El apellido paterno es obligatorio.
+          </small>
+        </div>
+        <div class="form-group">
+          <label>Apellido Materno</label>
+          <input
+            type="text"
+            id="apellidoMaterno"
+            formControlName="apellido_materno"
+          />
+          <small
+            *ngIf="apellido_materno.invalid && apellido_materno.touched"
+            class="error"
+          >
+            El apellido Materno es obligatorio.
+          </small>
+        </div>
+
+        <!-- Datos personales -->
+        <div class="form-group">
+          <label>*Fecha de Nacimiento</label>
+          <input
+            type="date"
+            id="fecha_nacimiento"
+            formControlName="fecha_nacimiento"
+            [attr.min]="fechaMinNacimiento | date : 'yyyy-MM-dd'"
+            [attr.max]="fechaMaxNacimiento | date : 'yyyy-MM-dd'"
+          />
+          <small
+            *ngIf="fecha_nacimiento.invalid && fecha_nacimiento.touched"
+            class="error"
+          >
+            La fecha de nacimiento es obligatoria.
+          </small>
+        </div>
+        <div class="form-group">
+          <label>*Sexo</label>
+          <select formControlName="sexo" id="sexo">
+            <option value="" disabled selected>Selecciona</option>
+            <option value="M">Masculino</option>
+            <option value="F">Femenino</option>
+          </select>
+          <small *ngIf="sexo.invalid && sexo.touched" class="error">
+            El sexo es obligatorio.
+          </small>
+        </div>
+        <div class="form-group">
+          <label>*CURP</label>
+          <input
+            id="curp"
+            type="text"
+            formControlName="curp"
+            maxlength="18"
+            (input)="toUppercase('curp', $event)"
+          />
+          <small
+            *ngIf="curp.errors?.['required'] && curp.touched"
+            class="error"
+          >
+            La CURP es obligatoria.
+          </small>
+          <small *ngIf="curp.errors?.['pattern'] && curp.touched" class="error">
+            La CURP no es válida.
+          </small>
+        </div>
+        <div class="form-group">
+          <label>*RFC</label>
+          <input
+            id="rfc"
+            type="text"
+            maxlength="13"
+            formControlName="rfc"
+            (input)="toUppercase('rfc', $event)"
+          />
+          <small *ngIf="rfc.errors?.['required'] && rfc.touched" class="error">
+            El RFC es obligatoria.
+          </small>
+          <small *ngIf="rfc.errors?.['pattern'] && rfc.touched" class="error">
+            El RFC no es válida.
+          </small>
+        </div>
+        <div class="form-group">
+          <label>*Email</label>
+          <input
+            type="email"
+            formControlName="email"
+            class="form-control"
+            id="email"
+          />
+          <div *ngIf="email.invalid && (email.dirty || email.touched)">
+            <span *ngIf="email.errors?.['required']"
+              >El email es obligatorio</span
+            >
+            <span *ngIf="email.errors?.['pattern']"
+              >El email debe ser valido</span
+            >
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Situacion sentimental</label>
+          <select
+            formControlName="situacion_sentimental"
+            id="situacion_sentimental"
+          >
+            <option value="" disabled selected>Selecciona</option>
+            <option value="Soltero">Soltero(a)</option>
+            <option value="Casado">Casado(a)</option>
+            <option value="Divorciado">Divorciado(a)</option>
+            <option value="Viudo">Viudo(a)</option>
+          </select>
+          <small
+            *ngIf="
+              situacion_sentimental.invalid && situacion_sentimental.touched
+            "
+            class="error"
+          >
+            El Estado Civil es obligatorio.
+          </small>
+        </div>
+        <div class="form-group">
+          <label>*Número de Hijos</label>
+          <input
+            type="number"
+            min="0"
+            max="10"
+            formControlName="numero_hijos"
+            id="numero_hijos"
+          />
+          <div
+            *ngIf="
+              numero_hijos.invalid &&
+              (numero_hijos.dirty || numero_hijos.touched)
+            "
+          >
+            <span *ngIf=" numero_hijos.errors?.['required']"
+              >El Número de Hijos es obligatorio</span
+            >
+            <span *ngIf="numero_hijos.errors?.['min']"
+              >El número de Hijos minimo es 0</span
+            >
+            <span *ngIf="numero_hijos.errors?.['max']"
+              >El número de Hijos maximo es 10</span
+            >
+          </div>
+        </div>
+
+        <!-- Datos laborales -->
+        <div class="form-group">
+          <label>*Numero de empleado</label>
+          <input
+            type="text"
+            id="numero_empleado"
+            formControlName="numero_empleado"
+            maxlength="10"
+            (input)="toUppercase('numero_empleado', $event)"
+          />
+          <small
+            *ngIf="numero_empleado.invalid && numero_empleado.touched"
+            class="error"
+          >
+            El numero de empleado es obligatorio.
+          </small>
+        </div>
+        <div class="form-group">
+          <label>*Número de Plaza</label>
+          <input
+            type="text"
+            id="numeroPlaza"
+            formControlName="numero_plaza"
+            maxlength="8"
+          />
+          <div
+            *ngIf="
+              numero_plaza.invalid &&
+              (numero_plaza.dirty || numero_plaza.touched)
+            "
+          >
+            <span *ngIf=" numero_plaza.errors?.['required']"
+              >El Número de Plaza es obligatorio</span
+            >
+          </div>
+        </div>
+        <div class="form-group">
+          <label>*Fecha de Ingreso</label>
+          <input
+            type="date"
+            id="fecha_ingreso"
+            formControlName="fecha_ingreso"
+            [attr.min]="fechaMinIngreso | date : 'yyyy-MM-dd'"
+            [attr.max]="hoy | date : 'yyyy-MM-dd'"
+          />
+
+          <small
+            *ngIf="fecha_ingreso.invalid && fecha_ingreso.touched"
+            class="error"
+          >
+            La fecha de nacimiento es obligatoria.
+          </small>
+        </div>
+
+        <div class="form-group">
+          <label>*Fecha de Ingreso al Gobierno</label>
+          <input
+            type="date"
+            formControlName="fecha_ingreso_gobierno"
+            [attr.min]="fechaMinIngresoGobierno | date : 'yyyy-MM-dd'"
+            [attr.max]="hoy | date : 'yyyy-MM-dd'"
+          />
+          <small
+            *ngIf="
+              fecha_ingreso_gobierno.invalid && fecha_ingreso_gobierno.touched
+            "
+            class="error"
+          >
+            Debe ser entre 1980 y la fecha actual.
+          </small>
+        </div>
+        <div class="form-group">
+          <label>*Nivel de Puesto</label>
+          <input
+            type="text"
+            id="nivel_puesto"
+            formControlName="nivel_puesto"
+          />
+          <small
+            *ngIf="nivel_puesto.invalid && nivel_puesto.touched"
+            class="error"
+          >
+            El nombre del puesto es obligatorio.
+          </small>
+        </div>
+        <div class="form-group">
+          <label>*Nombre de Puesto</label>
+          <input
+            type="text"
+            id="nombre_puesto"
+            formControlName="nombre_puesto"
+          />
+          <small
+            *ngIf="nombre_puesto.invalid && nombre_puesto.touched"
+            class="error"
+          >
+            El nombre del puesto es obligatorio.
+          </small>
+        </div>
+        <div class="form-group">
+          <label>Puesto INPI</label>
+          <input type="text" id="puesto_inpi" formControlName="puesto_inpi" />
+          <small
+            *ngIf="puesto_inpi.invalid && puesto_inpi.touched"
+            class="error"
+          >
+            El nombre del puesto INPI es obligatorio.
+          </small>
+        </div>
+
+        <div class="form-group">
+          <label>*Adscripcion</label>
+          <input type="text" id="adscripcion" formControlName="adscripcion" />
+          <small
+            *ngIf="adscripcion.invalid && adscripcion.touched"
+            class="error"
+          >
+            La adscripcion es obligatoria.
+          </small>
+        </div>
+        
+        <div class="form-group">
+          <label>*Id de seccion</label>
+          <input
+            type="number"
+            id="id_seccion"
+            formControlName="id_seccion"
+            min="1"
+            max="500"
+          />
+          <div
+            *ngIf="
+              id_seccion.invalid &&
+              (id_seccion.dirty || id_seccion.touched)
+            "
+          >
+            <span *ngIf=" id_seccion.errors?.['required']"
+              >El Id de seccion es obligatorio</span
+            >
+            <span *ngIf="numero_plaza.errors?.['min']"
+              >El Id de seccion minimo es 1</span
+            >
+            <span *ngIf="numero_plaza.errors?.['max']"
+              >El Id de seccion maximo es 500</span
+            >
+          </div>
+        </div>
+
+        <!-- Datos escolares -->
+        <div class="form-group">
+          <label>Nivel de Estudios</label>
+          <select formControlName="nivel_estudios" id="nivel_estudios">
+            <option value="" disabled selected>Selecciona</option>
+            <option value="Primaria">Primaria</option>
+            <option value="Secundaria">Secundaria</option>
+            <option value="Preparatoria">Preparatoria</option>
+            <option value="Licenciatura">Licenciatura</option>
+            <option value="Maestría">Maestría</option>
+            <option value="Doctorado">Doctorado</option>
+          </select>
+          <small
+            *ngIf="nivel_estudios.invalid && nivel_estudios.touched"
+            class="error"
+          >
+            El Nivel de Estudios es obligatorio.
+          </small>
+        </div>
+
+        <div class="form-group">
+          <label>Institución de Estudios</label>
+          <input
+            type="text"
+            id="institucion_estudios"
+            formControlName="institucion_estudios"
+          />
+          <small
+            *ngIf="institucion_estudios.invalid && institucion_estudios.touched"
+            class="error"
+          >
+            La Institución de Estudios es obligatoria.
+          </small>
+        </div>
+        <div class="form-group">
+          <label>Certificado de Estudios *(input inactivo)</label>
+          <input type="text" />
+        </div>
+        <div class="form-group">
+          <label>Plaza Base</label>
+          <input type="text" formControlName="plaza_base" id="plaza_base" />
+          <small *ngIf="plaza_base.invalid && plaza_base.touched" class="error">
+            La Plaza Base es obligatoria.
+          </small>
+        </div>
+        <div class="form-group">
+          <label>Fecha de Actualización</label>
+          <input
+            type="date"
+            formControlName="fecha_actualizacion"
+            id="fecha_actualizacion"
+            [attr.min]="'2024-01-01'"
+            [attr.max]="formatearFechaParaInput(hoy)"
+          />
+          <small
+            *ngIf="fecha_actualizacion?.errors?.['fechaFueraDeRango'] && fecha_actualizacion?.touched"
+            class="error"
+          >
+            La fecha debe estar entre el 1 de enero de 2024 y hoy.
+          </small>
+        </div>
+
+        <!-- Botón de registro -->
+
+        <!--
+- ngClass aplica una clase distinta dependiendo si el formulario es válido o no.
+- btn-valido: se aplica cuando el formulario está completo y listo para enviarse.
+- btn-invalido: se aplica cuando faltan campos, y desactiva la interacción visualmente.
+-->
+
+        <div class="form-actions">
+          <button
+            type="submit"
+            [disabled]="formEmpleado.invalid"
+            [ngClass]="{
+              'btn-valido': formEmpleado.valid,
+              'btn-invalido': formEmpleado.invalid
+            }"
+          >
+            Registrar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

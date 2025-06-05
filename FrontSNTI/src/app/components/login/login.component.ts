@@ -1,44 +1,60 @@
 import { Component } from '@angular/core';
-import { RouterLink } from '@angular/router';
-import {
-  FormControl,
-  FormBuilder,
-  FormGroup,
-  Validators,
-} from '@angular/forms';
-
+import { FormBuilder, Validators } from '@angular/forms';
+import { AuthService } from '../../core/services/auth.service';
+import { Router } from '@angular/router';
+import { CommonModule, NgClass } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
-import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [RouterLink,ReactiveFormsModule, CommonModule],
+  imports: [RouterLink,ReactiveFormsModule, CommonModule, NgClass],
   templateUrl: './login.component.html',
   styleUrl: './login.component.css'
 })
 export class LoginComponent {
 
-  get email(){
-    return this.formLogin.get('email') as FormControl;
-  }
-  get curp(){
-    return this.formLogin.get('curp') as FormControl;
-  }
-  get password(){
-    return this.formLogin.get('password') as FormControl;
-  }
-
-  formLogin = new FormGroup({
-    'email': new FormControl('', [Validators.required, Validators.pattern(/^[a-zA-Z0-9][a-zA-Z0-9._-]*@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)]),
-    'curp': new FormControl('', [Validators.required, Validators.pattern(/^[A-Z]{4}\d{6}[HM][A-Z]{5}[A-Z\d]{2}$/)]),
-    'password': new FormControl('', [Validators.required, Validators.minLength(8)]),
+  errorMsg = '';
+  
+  loginForm = this.fb.group({
+    identificador: ['', Validators.required],
+    contraseña: ['', [Validators.required, Validators.minLength(6)]]
   });
+
+constructor(private fb: FormBuilder, private auth: AuthService, private router: Router) {}
+onSubmit() {
+    if (this.loginForm.invalid) return;
+    const { identificador, contraseña } = this.loginForm.value;
+    if (identificador == null || contraseña == null) {
+      this.errorMsg = 'Por favor complete todos los campos.';
+      return;
+    }
+    this.auth.login({ identificador: identificador as string, contraseña: contraseña as string }).subscribe({
+      next: resp => {
+        if (resp.success && resp.data?.token) {
+          if (resp.data.usuario.rol === 'ADMINISTRADOR') {
+            this.router.navigate(['/admin']);
+          } else {
+            this.router.navigate(['/user']);
+          }
+        }
+      },
+      error: err => {
+        if (err.status === 401 || err.status === 423) {
+          this.errorMsg = err.error?.message || 'Credenciales incorrectas o cuenta bloqueada';
+        } else {
+          this.errorMsg = 'Ocurrió un error inesperado.';
+        }
+      }
+    });
+    
+  }
 
   //metodo uppercase para convertir el texto a mayusculas
 toUppercase(controlName: string, event: Event) {
   const input = event.target as HTMLInputElement;
   const uppercaseValue = input.value.toUpperCase();
-  this.formLogin.get(controlName)?.setValue(uppercaseValue);
+  this.loginForm.get(controlName)?.setValue(uppercaseValue);
 }
 
 }

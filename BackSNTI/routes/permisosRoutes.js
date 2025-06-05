@@ -1,295 +1,245 @@
 // routes/permisosRoutes.js
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const { check, param } = require('express-validator');
-const { verifyToken } = require('../middleware/auth');
-const { hasRole } = require('../middleware/authorization');
+const { param } = require('express-validator');
+const {
+    validarPermiso,
+    crearPermiso,
+    listarPermisos,
+    obtenerPermisosPorTrabajador,
+    consultarMiPermiso,
+    actualizarPermiso,
+    eliminarPermiso,
+    descargarDocumentoPermiso
+} = require("../controllers/permisosController");
+const { uploadAprobacionPermiso } = require("../config/multerPermisos");
+const { verifyToken } = require("../middleware/auth");
+const { hasRole } = require("../middleware/authorization");
 const Roles = require('../enums/roles.enum');
-const permisosController = require('../controllers/permisosController');
 
 /**
  * @swagger
  * tags:
- *   - name: Permisos
- *     description: Gestión de solicitudes y aprobaciones de permisos para trabajadores.
+ * - name: Permisos
+ *   description: Gestión de permisos de trabajadores y documentos asociados
  */
 
 /**
  * @swagger
  * components:
- *   securitySchemes:
- *     bearerAuth:
- *       type: http
- *       scheme: bearer
- *       bearerFormat: JWT
  *   schemas:
- *     Permiso:
- *       type: object
- *       properties:
- *         id_permiso:
- *           type: integer
- *           readOnly: true
- *           description: ID único del permiso.
- *           example: 1
- *         id_trabajador:
- *           type: integer
- *           description: ID del trabajador al que se le concede el permiso.
- *           example: 123
- *         tipo_permiso:
- *           type: string
- *           description: Tipo de permiso (ej. "Vacaciones", "Enfermedad", "Asuntos Personales").
- *           example: "Vacaciones"
- *         fecha_inicio:
- *           type: string
- *           format: date
- *           description: Fecha de inicio del permiso (YYYY-MM-DD).
- *           example: "2024-07-01"
- *         fecha_fin:
- *           type: string
- *           format: date
- *           description: Fecha de fin del permiso (YYYY-MM-DD).
- *           example: "2024-07-15"
- *         motivo:
- *           type: string
- *           description: Motivo o razón del permiso.
- *           example: "Descanso anual"
- *         estatus:
- *           type: string
- *           enum: [Pendiente, Aprobado, Denegado, NoSolicitado]
- *           default: Pendiente
- *           description: Estatus actual del permiso.
- *           example: "Aprobado"
- *         documento_aprobacion_id:
- *           type: integer
- *           nullable: true
- *           description: ID del documento de aprobación/denegación asociado.
- *           example: 45
- *         documento_url:
- *           type: string
- *           nullable: true
- *           description: URL para descargar o ver el documento de aprobación/denegación.
- *           example: "http://localhost:3000/uploads/aprobaciones_permisos/16789012345-abcde.pdf"
- *         fecha_registro:
- *           type: string
- *           format: date-time
- *           readOnly: true
- *           description: Fecha y hora de registro del permiso.
- *           example: "2024-06-01T10:00:00Z"
- *         trabajadores:
- *           type: object
- *           properties:
- *             id_trabajador:
- *               type: integer
- *             nombre:
- *               type: string
- *             apellido_paterno:
- *               type: string
- *             apellido_materno:
- *               type: string
- *           description: Datos básicos del trabajador asociado.
- *         documentos:
- *           type: object
- *           properties:
- *             id_documento:
- *               type: integer
- *             nombre_archivo:
- *               type: string
- *             ruta_archivo:
- *               type: string
- *             mime_type:
- *               type: string
- *           description: Información del documento asociado al permiso.
- * 
  *     PermisoInput:
  *       type: object
  *       required:
  *         - id_trabajador
- *         - tipo_permiso
  *         - fecha_inicio
  *         - fecha_fin
  *         - motivo
  *       properties:
  *         id_trabajador:
  *           type: integer
- *           description: ID del trabajador que solicita el permiso.
- *           example: 123
+ *           example: 1
  *         tipo_permiso:
  *           type: string
- *           description: Tipo de permiso.
+ *           maxLength: 20
  *           example: "Vacaciones"
  *         fecha_inicio:
  *           type: string
  *           format: date
- *           description: Fecha de inicio del permiso (YYYY-MM-DD).
- *           example: "2024-08-01"
+ *           example: "2024-06-01"
  *         fecha_fin:
  *           type: string
  *           format: date
- *           description: Fecha de fin del permiso (YYYY-MM-DD).
- *           example: "2024-08-10"
+ *           example: "2024-06-15"
  *         motivo:
  *           type: string
- *           description: Motivo detallado del permiso.
  *           example: "Viaje familiar"
  *         estatus:
  *           type: string
- *           enum: [Pendiente, Aprobado, Denegado]
- *           default: Pendiente
- *           description: Estatus inicial del permiso (solo para ADMINISTRADOR).
- *           example: "Pendiente"
- *         documento_aprobacion:
- *           type: string
- *           format: binary
- *           description: Archivo de aprobación/denegación (PDF/Imagen) a subir.
+ *           maxLength: 20
+ *           example: "Aprobado"
  * 
- *     PermisoUpdate:
+ *     PermisoUpdateInput:
  *       type: object
  *       properties:
+ *         id_trabajador:
+ *           type: integer
+ *           example: 1
  *         tipo_permiso:
  *           type: string
- *           description: Nuevo tipo de permiso.
- *           example: "Licencia Médica"
+ *           example: "Permiso por Enfermedad"
  *         fecha_inicio:
  *           type: string
  *           format: date
- *           description: Nueva fecha de inicio del permiso (YYYY-MM-DD).
- *           example: "2024-09-01"
+ *           example: "2024-07-01"
  *         fecha_fin:
  *           type: string
  *           format: date
- *           description: Nueva fecha de fin del permiso (YYYY-MM-DD).
- *           example: "2024-09-05"
+ *           example: "2024-07-03"
  *         motivo:
  *           type: string
- *           description: Nuevo motivo del permiso.
- *           example: "Consulta médica"
+ *           example: "Cita médica"
  *         estatus:
  *           type: string
- *           enum: [Pendiente, Aprobado, Denegado]
- *           description: Nuevo estatus del permiso (solo para ADMINISTRADOR).
  *           example: "Aprobado"
- *         documento_aprobacion:
+ * 
+ *     PermisoOutput:
+ *       type: object
+ *       properties:
+ *         id_permiso:
+ *           type: integer
+ *           readOnly: true
+ *           example: 1
+ *         id_trabajador:
+ *           type: integer
+ *           example: 1
+ *         tipo_permiso:
  *           type: string
- *           format: binary
- *           description: Nuevo archivo de aprobación/denegación (PDF/Imagen) a subir.
- *         eliminar_documento:
- *           type: boolean
- *           description: Establecer a `true` para eliminar el documento existente asociado al permiso.
- *           example: false
+ *           example: "Vacaciones"
+ *         fecha_inicio:
+ *           type: string
+ *           format: date
+ *           example: "2024-06-01"
+ *         fecha_fin:
+ *           type: string
+ *           format: date
+ *           example: "2024-06-15"
+ *         motivo:
+ *           type: string
+ *           example: "Viaje familiar"
+ *         estatus:
+ *           type: string
+ *           example: "Aprobado"
+ *         documento_aprobacion_id:
+ *           type: integer
+ *           example: 101
+ *         fecha_registro:
+ *           type: string
+ *           format: date-time
+ *           readOnly: true
+ *         trabajadores:
+ *           type: object
+ *           properties:
+ *             nombre: 
+ *               type: string
+ *               example: "Juan"
+ *             apellido_paterno: 
+ *               type: string
+ *               example: "Pérez"
+ *             apellido_materno: 
+ *               type: string
+ *               example: "Gómez"
+ *             identificador: 
+ *               type: string
+ *               example: "juan.perez"
+ *         documentos:
+ *           type: object
+ *           properties:
+ *             id_documento: 
+ *               type: integer
+ *               example: 101
+ *             nombre_archivo: 
+ *               type: string
+ *               example: "aprobacion.pdf"
+ *             ruta_almacenamiento: 
+ *               type: string
+ *               example: "uploads/aprobaciones/1717000000000-file.pdf"
+ *             tipo_documento: 
+ *               type: string
+ *               example: "Aprobación"
+ *             fecha_subida: 
+ *               type: string
+ *               format: date-time
  * 
  *   responses:
  *     400Error:
- *       description: Error de validación o solicitud inválida.
+ *       description: Error de validación
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/ApiError'
+ *             type: object
+ *             properties:
+ *               success: 
+ *                 type: boolean
+ *                 example: false
+ *               message: 
+ *                 type: string
+ *                 example: "Error de validación"
+ *               errors:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     msg: 
+ *                       type: string
+ *                     param: 
+ *                       type: string
+ *                     location: 
+ *                       type: string
  *     401Error:
- *       description: No autorizado (token JWT no proporcionado o inválido).
+ *       description: No autorizado
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/ApiError'
+ *             type: object
+ *             properties:
+ *               success: 
+ *                 type: boolean
+ *                 example: false
+ *               message: 
+ *                 type: string
+ *                 example: "Acceso no autorizado"
  *     403Error:
- *       description: Prohibido - Rol no permitido.
+ *       description: Prohibido
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/ApiError'
+ *             type: object
+ *             properties:
+ *               success: 
+ *                 type: boolean
+ *                 example: false
+ *               message: 
+ *                 type: string
+ *                 example: "Acceso denegado"
  *     404Error:
- *       description: Recurso no encontrado.
+ *       description: No encontrado
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/ApiError'
+ *             type: object
+ *             properties:
+ *               success: 
+ *                 type: boolean
+ *                 example: false
+ *               message: 
+ *                 type: string
+ *                 example: "Recurso no encontrado"
  *     500Error:
- *       description: Error interno del servidor.
+ *       description: Error del servidor
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/ApiError'
+ *             type: object
+ *             properties:
+ *               success: 
+ *                 type: boolean
+ *                 example: false
+ *               message: 
+ *                 type: string
+ *                 example: "Error interno"
+ *               error: 
+ *                 type: string
  */
 
-/**
- * @swagger
- * /permisos:
- *   get:
- *     summary: Obtiene todos los permisos registrados en el sistema.
- *     tags: [Permisos]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: Lista de permisos obtenida exitosamente.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 data:
- *                   type: array
- *                   items:
- *                     $ref: '#/components/schemas/Permiso'
- *       401:
- *         $ref: '#/components/responses/401Error'
- *       403:
- *         $ref: '#/components/responses/403Error'
- *       500:
- *         $ref: '#/components/responses/500Error'
- */
-router.get(
-  '/permisos',
-  verifyToken,
-  hasRole([Roles.ADMINISTRADOR]),
-  permisosController.getAllPermisos
-);
-
-/**
- * @swagger
- * /permisos/mis-permisos:
- *   get:
- *     summary: Obtiene todos los permisos asociados al trabajador autenticado.
- *     tags: [Permisos]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: Lista de permisos del trabajador obtenida exitosamente.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 data:
- *                   type: array
- *                   items:
- *                     $ref: '#/components/schemas/Permiso'
- *       401:
- *         $ref: '#/components/responses/401Error'
- *       403:
- *         $ref: '#/components/responses/403Error'
- *       500:
- *         $ref: '#/components/responses/500Error'
- */
-router.get(
-  '/permisos/mis-permisos',
-  verifyToken,
-  hasRole([Roles.ADMINISTRADOR, Roles.USUARIO]),
-  permisosController.getMyPermisos
-);
+// --- Rutas para Permisos ---
 
 /**
  * @swagger
  * /permisos:
  *   post:
- *     summary: Crea un nuevo permiso para un trabajador.
- *     description: Solo accesible para el rol ADMINISTRADOR. Permite adjuntar un documento de aprobación/denegación.
+ *     summary: Crea un nuevo permiso con documento
+ *     description: Accesible solo para ADMINISTRADORES
  *     tags: [Permisos]
  *     security:
  *       - bearerAuth: []
@@ -298,92 +248,52 @@ router.get(
  *       content:
  *         multipart/form-data:
  *           schema:
- *             $ref: '#/components/schemas/PermisoInput'
+ *             type: object
+ *             required:
+ *               - id_trabajador
+ *               - fecha_inicio
+ *               - fecha_fin
+ *               - motivo
+ *               - documento
+ *             properties:
+ *               id_trabajador:
+ *                 type: integer
+ *                 example: 1
+ *               tipo_permiso:
+ *                 type: string
+ *                 example: "Vacaciones"
+ *               fecha_inicio:
+ *                 type: string
+ *                 format: date
+ *                 example: "2024-06-01"
+ *               fecha_fin:
+ *                 type: string
+ *                 format: date
+ *                 example: "2024-06-15"
+ *               motivo:
+ *                 type: string
+ *                 example: "Viaje familiar"
+ *               estatus:
+ *                 type: string
+ *                 example: "Aprobado"
+ *               documento:
+ *                 type: string
+ *                 format: binary
  *     responses:
  *       201:
- *         description: Permiso creado exitosamente.
+ *         description: Permiso creado con documento
  *         content:
  *           application/json:
  *             schema:
  *               type: object
  *               properties:
- *                 success:
+ *                 success: 
  *                   type: boolean
  *                   example: true
- *                 message:
+ *                 message: 
  *                   type: string
- *                   example: "Permiso creado exitosamente."
- *                 permiso:
- *                   $ref: '#/components/schemas/Permiso'
- *       400:
- *         $ref: '#/components/responses/400Error'
- *       401:
- *         $ref: '#/components/responses/401Error'
- *       403:
- *         $ref: '#/components/responses/403Error'
- *       413:
- *         description: Archivo demasiado grande (LIMIT_FILE_SIZE de Multer).
- *       415:
- *         description: Tipo de archivo no permitido (UNSUPPORTED_MEDIA_TYPE de Multer).
- *       500:
- *         $ref: '#/components/responses/500Error'
- */
-router.post(
-  '/permisos',
-  verifyToken,
-  hasRole([Roles.ADMINISTRADOR]),
-  [
-    check('id_trabajador').isInt().withMessage('El ID del trabajador debe ser un número entero.'),
-    check('tipo_permiso').notEmpty().withMessage('El tipo de permiso es requerido.'),
-    check('fecha_inicio').isISO8601().toDate().withMessage('La fecha de inicio debe ser una fecha válida (YYYY-MM-DD).'),
-    check('fecha_fin').isISO8601().toDate().withMessage('La fecha de fin debe ser una fecha válida (YYYY-MM-DD).'),
-    check('motivo').notEmpty().withMessage('El motivo del permiso es requerido.'),
-    check('estatus')
-      .optional()
-      .isIn(['Pendiente', 'Aprobado', 'Denegado'])
-      .withMessage('El estatus del permiso debe ser Pendiente, Aprobado o Denegado.'),
-  ],
-  permisosController.createPermiso
-);
-
-/**
- * @swagger
- * /permisos/{id}:
- *   put:
- *     summary: Actualiza un permiso existente.
- *     description: Solo accesible para el rol ADMINISTRADOR. Permite actualizar detalles del permiso, su estatus, y/o adjuntar/reemplazar/eliminar el documento de aprobación.
- *     tags: [Permisos]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *         description: ID del permiso a actualizar.
- *     requestBody:
- *       required: true
- *       content:
- *         multipart/form-data:
- *           schema:
- *             $ref: '#/components/schemas/PermisoUpdate'
- *     responses:
- *       200:
- *         description: Permiso actualizado exitosamente.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 message:
- *                   type: string
- *                   example: "Permiso actualizado exitosamente."
- *                 permiso:
- *                   $ref: '#/components/schemas/Permiso'
+ *                 data:
+ *                   $ref: '#/components/schemas/PermisoOutput'
  *       400:
  *         $ref: '#/components/responses/400Error'
  *       401:
@@ -392,65 +302,184 @@ router.post(
  *         $ref: '#/components/responses/403Error'
  *       404:
  *         $ref: '#/components/responses/404Error'
- *       413:
- *         description: Archivo demasiado grande (LIMIT_FILE_SIZE de Multer).
- *       415:
- *         description: Tipo de archivo no permitido (UNSUPPORTED_MEDIA_TYPE de Multer).
  *       500:
  *         $ref: '#/components/responses/500Error'
  */
-router.put(
-  '/permisos/:id',
-  verifyToken,
-  hasRole([Roles.ADMINISTRADOR]),
-  [
-    param('id').isInt().withMessage('El ID del permiso debe ser un número entero válido.'),
-    check('tipo_permiso').optional().notEmpty().withMessage('El tipo de permiso no puede estar vacío.'),
-    check('fecha_inicio').optional().isISO8601().toDate().withMessage('La fecha de inicio debe ser una fecha válida (YYYY-MM-DD).'),
-    check('fecha_fin').optional().isISO8601().toDate().withMessage('La fecha de fin debe ser una fecha válida (YYYY-MM-DD).'),
-    check('motivo').optional().notEmpty().withMessage('El motivo del permiso no puede estar vacío.'),
-    check('estatus')
-      .optional()
-      .isIn(['Pendiente', 'Aprobado', 'Denegado'])
-      .withMessage('El estatus del permiso debe ser Pendiente, Aprobado o Denegado.'),
-    check('eliminar_documento')
-      .optional()
-      .isBoolean()
-      .withMessage('El campo eliminar_documento debe ser un valor booleano (true/false).'),
-  ],
-  permisosController.updatePermiso
+router.post(
+    "/",
+    verifyToken,
+    hasRole([Roles.ADMINISTRADOR]),
+    uploadAprobacionPermiso.single('documento'),
+    validarPermiso,
+    crearPermiso
 );
+
+/**
+ * @swagger
+ * /permisos:
+ *   get:
+ *     summary: Lista todos los permisos
+ *     description: Accesible solo para ADMINISTRADORES
+ *     tags: [Permisos]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Lista de permisos
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: 
+ *                   type: boolean
+ *                   example: true
+ *                 message: 
+ *                   type: string
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/PermisoOutput'
+ *       401:
+ *         $ref: '#/components/responses/401Error'
+ *       403:
+ *         $ref: '#/components/responses/403Error'
+ *       500:
+ *         $ref: '#/components/responses/500Error'
+ */
+router.get(
+    "/",
+    verifyToken,
+    hasRole([Roles.ADMINISTRADOR]),
+    listarPermisos
+);
+
+/**
+ * @swagger
+ * /permisos/trabajador/{idTrabajador}:
+ *   get:
+ *     summary: Obtiene permisos por trabajador
+ *     description: Accesible solo para ADMINISTRADORES
+ *     tags: [Permisos]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: idTrabajador
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: ID del trabajador
+ *     responses:
+ *       200:
+ *         description: Permisos del trabajador
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: 
+ *                   type: boolean
+ *                   example: true
+ *                 message: 
+ *                   type: string
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/PermisoOutput'
+ *       400:
+ *         $ref: '#/components/responses/400Error'
+ *       401:
+ *         $ref: '#/components/responses/401Error'
+ *       403:
+ *         $ref: '#/components/responses/403Error'
+ *       404:
+ *         $ref: '#/components/responses/404Error'
+ *       500:
+ *         $ref: '#/components/responses/500Error'
+ */
+router.get(
+    "/trabajador/:idTrabajador",
+    verifyToken,
+    hasRole([Roles.ADMINISTRADOR]),
+    [
+        param('idTrabajador')
+            .isInt().withMessage('ID debe ser entero')
+            .toInt()
+    ],
+    obtenerPermisosPorTrabajador
+);
+
+/**
+ * @swagger
+ * /permisos/mi-permiso:
+ *   get:
+ *     summary: Obtiene mis permisos
+ *     description: Accesible para ADMINISTRADORES y USUARIOS
+ *     tags: [Permisos]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Permisos del usuario
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: 
+ *                   type: boolean
+ *                   example: true
+ *                 message: 
+ *                   type: string
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/PermisoOutput'
+ *       401:
+ *         $ref: '#/components/responses/401Error'
+ *       500:
+ *         $ref: '#/components/responses/500Error'
+ */
+router.get(
+    "/mi-permiso",
+    verifyToken,
+    hasRole([Roles.ADMINISTRADOR, Roles.USUARIO]),
+    consultarMiPermiso
+);
+
 
 /**
  * @swagger
  * /permisos/{id}:
  *   delete:
- *     summary: Elimina un permiso existente.
- *     description: Solo accesible para el rol ADMINISTRADOR. También eliminará cualquier documento de aprobación asociado.
+ *     summary: Elimina un permiso
+ *     description: Accesible solo para ADMINISTRADORES
  *     tags: [Permisos]
  *     security:
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
- *         required: true
  *         schema:
  *           type: integer
- *         description: ID del permiso a eliminar.
+ *         required: true
+ *         description: ID del permiso
  *     responses:
  *       200:
- *         description: Permiso eliminado exitosamente.
+ *         description: Permiso eliminado
  *         content:
  *           application/json:
  *             schema:
  *               type: object
  *               properties:
- *                 success:
+ *                 success: 
  *                   type: boolean
  *                   example: true
- *                 message:
+ *                 message: 
  *                   type: string
- *                   example: "Permiso eliminado exitosamente."
+ *       400:
+ *         $ref: '#/components/responses/400Error'
  *       401:
  *         $ref: '#/components/responses/401Error'
  *       403:
@@ -461,13 +490,62 @@ router.put(
  *         $ref: '#/components/responses/500Error'
  */
 router.delete(
-  '/permisos/:id',
-  verifyToken,
-  hasRole([Roles.ADMINISTRADOR]),
-  [
-    param('id').isInt().withMessage('El ID del permiso debe ser un número entero válido.'),
-  ],
-  permisosController.deletePermiso
+    "/:id",
+    verifyToken,
+    hasRole([Roles.ADMINISTRADOR]),
+    [
+        param('id')
+            .isInt().withMessage('ID debe ser entero')
+            .toInt()
+    ],
+    eliminarPermiso
+);
+
+/**
+ * @swagger
+ * /permisos/documento/{documentoId}/descargar:
+ *   get:
+ *     summary: Descarga un documento de permiso
+ *     description: Accesible para ADMINISTRADORES y USUARIOS (solo propietario)
+ *     tags: [Permisos]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: documentoId
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: ID del documento
+ *     responses:
+ *       200:
+ *         description: Documento descargado
+ *         content:
+ *           application/pdf: {}
+ *           image/jpeg: {}
+ *           image/png: {}
+ *           image/webp: {}
+ *       400:
+ *         $ref: '#/components/responses/400Error'
+ *       401:
+ *         $ref: '#/components/responses/401Error'
+ *       403:
+ *         $ref: '#/components/responses/403Error'
+ *       404:
+ *         $ref: '#/components/responses/404Error'
+ *       500:
+ *         $ref: '#/components/responses/500Error'
+ */
+router.get(
+    "/documento/:documentoId/descargar",
+    verifyToken,
+    hasRole([Roles.ADMINISTRADOR, Roles.USUARIO]),
+    [
+        param('documentoId')
+            .isInt().withMessage('ID debe ser entero')
+            .toInt()
+    ],
+    descargarDocumentoPermiso
 );
 
 module.exports = router;

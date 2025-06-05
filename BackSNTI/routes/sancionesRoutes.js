@@ -1,92 +1,30 @@
 // routes/sancionesRoutes.js
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const { check, param } = require('express-validator');
-const { verifyToken } = require('../middleware/auth');
-const { hasRole } = require('../middleware/authorization');
+const { param } = require("express-validator");
+const {
+    validarSancion,
+    crearSancion,
+    listarSanciones,
+    obtenerSancionesPorTrabajador,
+    miSancion
+} = require("../controllers/sancionesController");
+const { verifyToken } = require("../middleware/auth");
+const { hasRole } = require("../middleware/authorization");
 const Roles = require('../enums/roles.enum');
-const sancionesController = require('../controllers/sancionesController');
 
 /**
  * @swagger
  * tags:
- *   - name: Sanciones
- *     description: Gestión y consulta del historial de sanciones aplicadas a trabajadores.
+ * - name: Sanciones
+ *   description: Endpoints para administrar sanciones aplicadas a trabajadores
  */
 
 /**
  * @swagger
  * components:
- *   securitySchemes:
- *     bearerAuth:
- *       type: http
- *       scheme: bearer
- *       bearerFormat: JWT
  *   schemas:
- *     Sancion:
- *       type: object
- *       properties:
- *         id_sancion:
- *           type: integer
- *           readOnly: true
- *           description: ID único de la sanción.
- *           example: 1
- *         id_trabajador:
- *           type: integer
- *           description: ID del trabajador sancionado.
- *           example: 123
- *         tipo_sancion:
- *           type: string
- *           description: Tipo de sanción (ej. "Amonestación verbal", "Suspensión", "Despido").
- *           example: "Amonestación verbal"
- *         descripcion:
- *           type: string
- *           description: Descripción detallada del motivo de la sanción.
- *           example: "Retrasos reiterados a la entrada laboral."
- *         fecha_aplicacion:
- *           type: string
- *           format: date
- *           description: Fecha en que se aplicó la sanción (YYYY-MM-DD).
- *           example: "2024-05-20"
- *         fecha_fin:
- *           type: string
- *           format: date
- *           nullable: true
- *           description: Fecha en que termina la sanción, si aplica (YYYY-MM-DD).
- *           example: "2024-05-25"
- *         estatus:
- *           type: string
- *           default: "No"
- *           description: Estatus de la sanción (siempre "No", ya que es solo un registro histórico).
- *           example: "No"
- *         usuario_registro:
- *           type: string
- *           nullable: true
- *           readOnly: true
- *           description: Usuario que registró la sanción.
- *           example: "ADMIN_XYZ"
- *         fecha_registro:
- *           type: string
- *           format: date-time
- *           readOnly: true
- *           description: Fecha y hora de registro de la sanción.
- *           example: "2024-05-20T10:30:00Z"
- *         trabajadores:
- *           type: object
- *           properties:
- *             id_trabajador:
- *               type: integer
- *             nombre:
- *               type: string
- *             apellido_paterno:
- *               type: string
- *             apellido_materno:
- *               type: string
- *             numero_empleado:
- *               type: string
- *           description: Datos básicos del trabajador sancionado.
- * 
- *     SancionCrear:
+ *     SancionInput:
  *       type: object
  *       required:
  *         - id_trabajador
@@ -96,159 +34,171 @@ const sancionesController = require('../controllers/sancionesController');
  *       properties:
  *         id_trabajador:
  *           type: integer
- *           description: ID del trabajador a sancionar.
- *           example: 123
+ *           example: 1
  *         tipo_sancion:
  *           type: string
- *           description: Tipo de sanción.
- *           example: "Amonestación escrita"
+ *           maxLength: 50
+ *           example: "Amonestación Escrita"
  *         descripcion:
  *           type: string
- *           description: Motivo de la sanción.
- *           example: "Incumplimiento de horario."
+ *           example: "Retraso injustificado en la entrega de proyecto clave."
  *         fecha_aplicacion:
  *           type: string
  *           format: date
- *           description: Fecha de aplicación de la sanción (YYYY-MM-DD).
- *           example: "2024-06-01"
+ *           example: "2024-05-29"
  *         fecha_fin:
  *           type: string
  *           format: date
  *           nullable: true
- *           description: Fecha de fin de la sanción (YYYY-MM-DD), si aplica.
- *           example: "2024-06-05"
- */
-
-/**
- * @swagger
- * /sanciones:
- *   get:
- *     summary: Obtiene una lista de todas las sanciones registradas.
- *     description: Solo accesible para el rol ADMINISTRADOR. Permite consultar el historial de sanciones de todos los trabajadores.
- *     tags: [Sanciones]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: Lista de sanciones obtenida exitosamente.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 datos:
- *                   type: array
- *                   items:
- *                     $ref: '#/components/schemas/Sancion'
- *       401:
- *         description: No autorizado (token JWT no proporcionado o inválido).
- *       403:
- *         description: Prohibido - Rol no permitido (solo ADMINISTRADOR).
- *       500:
- *         description: Error interno del servidor.
- */
-router.get(
-  '/sanciones',
-  verifyToken,
-  hasRole([Roles.ADMINISTRADOR]),
-  sancionesController.obtenerTodasLasSanciones
-);
-
-/**
- * @swagger
- * /sanciones/{id}:
- *   get:
- *     summary: Obtiene una sanción específica por su ID.
- *     description: Solo accesible para el rol ADMINISTRADOR.
- *     tags: [Sanciones]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
+ *           example: "2024-06-15"
+ *         estatus:
+ *           type: string
+ *           maxLength: 20
+ *           nullable: true
+ *           example: "Activa"
+ * 
+ *     SancionOutput:
+ *       type: object
+ *       properties:
+ *         id_sancion:
  *           type: integer
- *         description: ID de la sanción a obtener.
- *     responses:
- *       200:
- *         description: Sanción obtenida exitosamente.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 datos:
- *                   $ref: '#/components/schemas/Sancion'
- *       401:
- *         description: No autorizado (token JWT no proporcionado o inválido).
- *       403:
- *         description: Prohibido - Rol no permitido (solo ADMINISTRADOR).
- *       404:
- *         description: Sanción no encontrada.
- *       500:
- *         description: Error interno del servidor.
+ *           readOnly: true
+ *           example: 1
+ *         id_trabajador:
+ *           type: integer
+ *           example: 1
+ *         tipo_sancion:
+ *           type: string
+ *           example: "Amonestación Escrita"
+ *         descripcion:
+ *           type: string
+ *           example: "Retraso injustificado en la entrega de proyecto clave."
+ *         fecha_aplicacion:
+ *           type: string
+ *           format: date
+ *           example: "2024-05-29"
+ *         fecha_fin:
+ *           type: string
+ *           format: date
+ *           nullable: true
+ *           example: "2024-06-15"
+ *         estatus:
+ *           type: string
+ *           nullable: true
+ *           example: "Activa"
+ *         usuario_registro:
+ *           type: string
+ *           readOnly: true
+ *           example: "admin@tuempresa.com"
+ *         fecha_registro:
+ *           type: string
+ *           format: date-time
+ *           readOnly: true
+ *         trabajadores:
+ *           type: object
+ *           properties:
+ *             nombre: 
+ *               type: string
+ *               example: "Juan"
+ *             apellido_paterno: 
+ *               type: string
+ *               example: "Pérez"
+ *             apellido_materno: 
+ *               type: string
+ *               example: "Gómez"
+ *             identificador: 
+ *               type: string
+ *               example: "juan.perez"
+ * 
+ *   responses:
+ *     400ValidationError:
+ *       description: Error de validación
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               success: 
+ *                 type: boolean
+ *                 example: false
+ *               message: 
+ *                 type: string
+ *                 example: "Error de validación"
+ *               errors:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     msg: 
+ *                       type: string
+ *                     param: 
+ *                       type: string
+ *                     location: 
+ *                       type: string
+ *     401UnauthorizedError:
+ *       description: No autorizado
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               success: 
+ *                 type: boolean
+ *                 example: false
+ *               message: 
+ *                 type: string
+ *                 example: "Acceso no autorizado"
+ *     403ForbiddenError:
+ *       description: Prohibido
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               success: 
+ *                 type: boolean
+ *                 example: false
+ *               message: 
+ *                 type: string
+ *                 example: "Acceso denegado"
+ *     404NotFoundError:
+ *       description: No encontrado
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               success: 
+ *                 type: boolean
+ *                 example: false
+ *               message: 
+ *                 type: string
+ *                 example: "Recurso no encontrado"
+ *     500ServerError:
+ *       description: Error del servidor
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               success: 
+ *                 type: boolean
+ *                 example: false
+ *               message: 
+ *                 type: string
+ *                 example: "Error interno"
+ *               error: 
+ *                 type: string
  */
-router.get(
-  '/sanciones/:id',
-  verifyToken,
-  hasRole([Roles.ADMINISTRADOR]),
-  [
-    param('id').isInt().withMessage('El ID de la sanción debe ser un número entero válido.'),
-  ],
-  sancionesController.obtenerSancionPorId
-);
 
-/**
- * @swagger
- * /sanciones/mis-sanciones:
- *   get:
- *     summary: Obtiene todas las sanciones asociadas al trabajador autenticado.
- *     description: Accesible para los roles ADMINISTRADOR y USUARIO. Los usuarios solo verán sus propias sanciones.
- *     tags: [Sanciones]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: Lista de sanciones del trabajador obtenida exitosamente.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 datos:
- *                   type: array
- *                   items:
- *                     $ref: '#/components/schemas/Sancion'
- *       401:
- *         description: No autorizado (token JWT no proporcionado o inválido).
- *       403:
- *         description: Prohibido - Rol no permitido.
- *       500:
- *         description: Error interno del servidor.
- */
-router.get(
-  '/sanciones/mis-sanciones',
-  verifyToken,
-  hasRole([Roles.ADMINISTRADOR, Roles.USUARIO]),
-  sancionesController.obtenerMisSanciones
-);
+// --- Rutas para Sanciones ---
 
 /**
  * @swagger
  * /sanciones:
  *   post:
- *     summary: Crea una nueva sanción para un trabajador.
- *     description: Solo accesible para el rol ADMINISTRADOR. Las sanciones creadas son inmutables y no pueden ser editadas o eliminadas posteriormente, sirviendo como registro histórico. El 'estatus' se establece automáticamente en "No".
+ *     summary: Crea una nueva sanción
+ *     description: Accesible solo para ADMINISTRADORES
  *     tags: [Sanciones]
  *     security:
  *       - bearerAuth: []
@@ -257,48 +207,173 @@ router.get(
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/SancionCrear'
+ *             $ref: '#/components/schemas/SancionInput'
  *     responses:
  *       201:
- *         description: Sanción creada exitosamente.
+ *         description: Sanción creada
  *         content:
  *           application/json:
  *             schema:
  *               type: object
  *               properties:
- *                 success:
+ *                 success: 
  *                   type: boolean
  *                   example: true
- *                 mensaje:
+ *                 message: 
  *                   type: string
- *                   example: "Sanción creada exitosamente."
- *                 sancion:
- *                   $ref: '#/components/schemas/Sancion'
+ *                 data:
+ *                   $ref: '#/components/schemas/SancionOutput'
  *       400:
- *         description: Datos de entrada inválidos o faltantes.
+ *         $ref: '#/components/responses/400ValidationError'
  *       401:
- *         description: No autorizado (token JWT no proporcionado o inválido).
+ *         $ref: '#/components/responses/401UnauthorizedError'
  *       403:
- *         description: Prohibido - Rol no permitido (solo ADMINISTRADOR).
+ *         $ref: '#/components/responses/403ForbiddenError'
  *       404:
- *         description: Trabajador no encontrado (si el id_trabajador no existe).
+ *         $ref: '#/components/responses/404NotFoundError'
  *       500:
- *         description: Error interno del servidor.
+ *         $ref: '#/components/responses/500ServerError'
  */
 router.post(
-  '/sanciones',
-  verifyToken,
-  hasRole([Roles.ADMINISTRADOR]),
-  [
-    check('id_trabajador').isInt().withMessage('El ID del trabajador debe ser un número entero.'),
-    check('tipo_sancion')
-      .notEmpty().withMessage('El tipo de sanción es requerido.')
-      .isLength({ max: 50 }).withMessage('El tipo de sanción no debe exceder 50 caracteres.'),
-    check('descripcion').notEmpty().withMessage('La descripción es requerida.'),
-    check('fecha_aplicacion').isISO8601().toDate().withMessage('La fecha de aplicación debe ser una fecha válida (YYYY-MM-DD).'),
-    check('fecha_fin').optional({ nullable: true }).isISO8601().toDate().withMessage('La fecha de fin debe ser una fecha válida (YYYY-MM-DD).'),
-  ],
-  sancionesController.crearSancion
+    "/",
+    verifyToken,
+    hasRole([Roles.ADMINISTRADOR]),
+    validarSancion,
+    crearSancion
+);
+
+/**
+ * @swagger
+ * /sanciones:
+ *   get:
+ *     summary: Lista todas las sanciones
+ *     description: Accesible solo para ADMINISTRADORES
+ *     tags: [Sanciones]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Lista de sanciones
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: 
+ *                   type: boolean
+ *                   example: true
+ *                 message: 
+ *                   type: string
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/SancionOutput'
+ *       401:
+ *         $ref: '#/components/responses/401UnauthorizedError'
+ *       403:
+ *         $ref: '#/components/responses/403ForbiddenError'
+ *       500:
+ *         $ref: '#/components/responses/500ServerError'
+ */
+router.get(
+    "/",
+    verifyToken,
+    hasRole([Roles.ADMINISTRADOR]),
+    listarSanciones
+);
+
+/**
+ * @swagger
+ * /sanciones/trabajador/{idTrabajador}:
+ *   get:
+ *     summary: Obtiene sanciones por trabajador
+ *     description: Accesible solo para ADMINISTRADORES
+ *     tags: [Sanciones]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: idTrabajador
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: ID del trabajador
+ *     responses:
+ *       200:
+ *         description: Sanciones del trabajador
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: 
+ *                   type: boolean
+ *                   example: true
+ *                 message: 
+ *                   type: string
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/SancionOutput'
+ *       400:
+ *         $ref: '#/components/responses/400ValidationError'
+ *       401:
+ *         $ref: '#/components/responses/401UnauthorizedError'
+ *       403:
+ *         $ref: '#/components/responses/403ForbiddenError'
+ *       404:
+ *         $ref: '#/components/responses/404NotFoundError'
+ *       500:
+ *         $ref: '#/components/responses/500ServerError'
+ */
+router.get(
+    "/trabajador/:idTrabajador",
+    verifyToken,
+    hasRole([Roles.ADMINISTRADOR]),
+    [
+        param('idTrabajador')
+            .isInt().withMessage('ID debe ser entero')
+            .toInt()
+    ],
+    obtenerSancionesPorTrabajador
+);
+
+/**
+ * @swagger
+ * /sanciones/mi-sancion:
+ *   get:
+ *     summary: Obtiene mis sanciones
+ *     description: Accesible para ADMINISTRADORES y USUARIOS
+ *     tags: [Sanciones]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Sanciones del usuario autenticado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: 
+ *                   type: boolean
+ *                   example: true
+ *                 message: 
+ *                   type: string
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/SancionOutput'
+ *       401:
+ *         $ref: '#/components/responses/401UnauthorizedError'
+ *       500:
+ *         $ref: '#/components/responses/500ServerError'
+ */
+router.get(
+    "/mi-sancion",
+    verifyToken,
+    hasRole([Roles.ADMINISTRADOR, Roles.USUARIO]),
+    miSancion
 );
 
 module.exports = router;

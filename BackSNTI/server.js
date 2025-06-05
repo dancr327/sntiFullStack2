@@ -15,8 +15,8 @@ const seccionRoutes = require('./routes/seccionRoutes'); // Ajusta la ruta si es
 const documentoRoutes = require('./routes/documentoRoutes'); // Ajusta la ruta si es necesario
 const hijosRoutes = require('./routes/hijosRoutes'); // Ajusta la ruta si es necesario
 const authRoutes = require('./routes/authRoutes'); // Ajusta la ruta si es necesario
-
-
+const sancionesRoutes = require('./routes/sancionesRoutes'); // Ajusta la ruta si es necesario
+const permisosRoutes = require('./routes/permisosRoutes'); // Ajusta la ruta si es necesario
 
 
 const trabajadorRoutes = require('./routes/trabajadorRoutes'); // Ajusta la ruta si es necesario
@@ -79,8 +79,8 @@ app.use('/secciones', seccionRoutes); // Monta el enrutador con el prefijo /api/
 app.use('/documentos', documentoRoutes); 
 app.use('/hijos', hijosRoutes); // Monta el enrutador con el prefijo /api/hijos
 app.use('/auth', authRoutes); // Monta el enrutador con el prefijo /api/auth
-
-
+app.use('/sanciones', sancionesRoutes); // Monta el enrutador con el prefijo /api/sanciones
+app.use('/permisos', permisosRoutes); // Monta el enrutador con el prefijo /api/permisos
 
 // Ruta base (opcional, si es necesario)
 app.get('/', (req, res) => {

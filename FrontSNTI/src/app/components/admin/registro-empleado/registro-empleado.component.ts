@@ -5,8 +5,8 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 
 //TrabajadoresService sirve para hacer peticiones al backend
-import { Trabajadores, TrabajadoresService } from '../../../core/services/admin/trabajadores.service';
-import { from } from 'rxjs';
+import { TrabajadoresService, } from '../../../core/services/trabajadores.service';
+import { Trabajador } from '../../../core/models/trabajador.model';
 
 @Component({
   selector: 'app-registro-empleado',
@@ -19,6 +19,12 @@ export class RegistroEmpleadoComponent {
 
 //getters para acceder a los controles del formulario
 // de manera mas sencilla, sin tener que escribir formEmpleado.get('name') cada vez
+get identificador(){
+  return this.formEmpleado.get('identificador') as FormControl;
+}
+get contrasena(){
+  return this.formEmpleado.get('contraseña') as FormControl;
+} //uso contrasena en lugar de contraseña porque contraseña no es un nombre valido para una variable en typescript, ya que contiene una letra con tilde
 get nombre(){
   return this.formEmpleado.get('nombre') as FormControl;
 }
@@ -88,12 +94,14 @@ get certificado_estudios(){
 get plaza_base(){
   return this.formEmpleado.get('plaza_base') as FormControl;
 }
-get fecha_actualizacion(){
-  return this.formEmpleado.get('fecha_actualizacion') as FormControl;
-}
+// get fecha_actualizacion(){
+//   return this.formEmpleado.get('fecha_actualizacion') as FormControl;
+// }
 
   formEmpleado= new FormGroup({ 
    // con validators.riquired se indica que el campo es requerido
+    'identificador':new FormControl ('', [Validators.required]),
+    'contraseña':new FormControl ('', [Validators.required, Validators.minLength(6)]),
     'nombre': new FormControl('',[Validators.required,Validators.pattern(/^[A-Za-zÁÉÍÓÚÑáéíóúüÜ0-9][A-Za-zÁÉÍÓÚÑáéíóúüÜ0-9\s.'-]*$/)]),
     'apellido_paterno': new FormControl('',[Validators.required,Validators.pattern(/^[A-Za-zÁÉÍÓÚÑáéíóúüÜ0-9][A-Za-zÁÉÍÓÚÑáéíóúüÜ0-9\s.'-]*$/)]),
     'apellido_materno': new FormControl('',[Validators.pattern(/^[A-Za-zÁÉÍÓÚÑáéíóúüÜ0-9][A-Za-zÁÉÍÓÚÑáéíóúüÜ0-9\s.'-]*$/)]),// el apellido materno no es requerido (campo opcional)
@@ -106,8 +114,8 @@ get fecha_actualizacion(){
 
     'email': new FormControl('', [Validators.required, Validators.pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)]),
     'situacion_sentimental': new FormControl('',), //el campo es opcional
+    'numero_hijos': new FormControl(0,[Validators.min(0), Validators.max(10)]), // numerode hijos es opcional
     'numero_empleado': new FormControl('', [Validators.required, Validators.pattern(/^[A-Za-z0-9]{10}$/)]),
-    'numero_hijos': new FormControl(0,[Validators.required, Validators.min(0), Validators.max(10)]),
     'numero_plaza': new FormControl('',[Validators.required,Validators.min(0), Validators.max(1000)]),
     'fecha_ingreso': new FormControl('',[Validators.required, this.validarAntiguedadDesde1980()]),
     'fecha_ingreso_gobierno': new FormControl ('', [Validators.required, this.validarAntiguedadMaxima()]),
@@ -120,7 +128,7 @@ get fecha_actualizacion(){
     'institucion_estudios': new FormControl ('',[Validators.pattern(/^[A-Za-zÁÉÍÓÚÑáéíóúüÜ0-9][A-Za-zÁÉÍÓÚÑáéíóúüÜ0-9\s.'-]*$/)]), //el campo es opcional
     'certificado_estudios': new FormControl(false),
     'plaza_base': new FormControl ('',[Validators.pattern(/^[A-Za-zÁÉÍÓÚÑáéíóúüÜ0-9][A-Za-zÁÉÍÓÚÑáéíóúüÜ0-9\s.'-]*$/)]), //el campo es opcional
-    'fecha_actualizacion': new FormControl (this.formatearFechaParaInput(new Date()), [ this.validarFechaDesde2024()]), //campo opcional
+    // 'fecha_actualizacion': new FormControl (this.formatearFechaParaInput(new Date()), [ this.validarFechaDesde2024()]), //campo opcional
   });
 
 
@@ -138,13 +146,6 @@ fechaMaxNacimiento = new Date();
 fechaMinIngreso = new Date('1980-01-01');
 fechaMinIngresoGobierno = new Date('1980-01-01');
 fechaMinActualizacion = new Date('2024-01-01');
-
-constructor(
-  
-  private trabajadoresService: TrabajadoresService // inyectar el servicio de trabajadores
-) {
-  this.fechaMaxNacimiento.setFullYear(this.hoy.getFullYear() - 18);
-}
 
 // Valida que la fecha de nacimiento sea entre 1 enero 1950 y hace 18 años
 validarRangoEdad(): ValidatorFn {
@@ -210,42 +211,64 @@ toUppercase(controlName: string, event: Event) {
   this.formEmpleado.get(controlName)?.setValue(uppercaseValue);
 }
 
-//codigo para hace post a trabajadores
-private formatearFechaISO(fecha: string | null): string {
-  if (!fecha) return '';
-  const date = new Date(fecha);
-  return date.toISOString().split('T')[0]; // Regresa yyyy-MM-dd
+constructor(
+  
+  private trabajadoresService: TrabajadoresService// inyectar el servicio de trabajadores
+) {
+  this.fechaMaxNacimiento.setFullYear(this.hoy.getFullYear() - 18);
 }
 
+// onSubmit() {
+//   // Validar si el formulario es válido antes de enviar
+//   // Si el formulario es válido, puedes enviar los datos al backend
+//     if (this.formEmpleado.valid) {
 
-onSubmit() {
-  // Validar si el formulario es válido antes de enviar
-  // Si el formulario es válido, puedes enviar los datos al backend
-    if (this.formEmpleado.valid) {
-
-    const formValue = this.formEmpleado.value;
-    // Convertir las fechas a formato ISO
-    // y asegurarse de que sean cadenas
-    const trabajadorData = {
-      ...formValue,
-      fecha_nacimiento: new Date(formValue.fecha_nacimiento!).toISOString(),
-      fecha_ingreso: new Date(formValue.fecha_ingreso!).toISOString(),
-      fecha_ingreso_gobierno: new Date(formValue.fecha_ingreso_gobierno!).toISOString(),
-      fecha_actualizacion: new Date(formValue.fecha_actualizacion!).toISOString(),
-    } as Trabajadores;
+//     const formValue = this.formEmpleado.value;
+//     // Convertir las fechas a formato ISO
+//     // y asegurarse de que sean cadenas
+//     const trabajadorData = {
+//       ...formValue,
+//       fecha_nacimiento: new Date(formValue.fecha_nacimiento!).toISOString(),
+//       fecha_ingreso: new Date(formValue.fecha_ingreso!).toISOString(),
+//       fecha_ingreso_gobierno: new Date(formValue.fecha_ingreso_gobierno!).toISOString(),
+//       // fecha_actualizacion: new Date(formValue.fecha_actualizacion!).toISOString(),
+//     } as Trabajadores;
     
 
-      this.trabajadoresService.crearTrabajador(trabajadorData)
-        .subscribe({
-          next: (res) => {
-            console.log('Empleado creado:', res);
-            // Resetear formulario o redireccionar
-          },
-          error: (err) => {
-            console.error('Error:', err);
-          }
-        });
+//       this.trabajadoresService.crearTrabajador(trabajadorData)
+//         .subscribe({
+//           next: (res) => {
+//             console.log('Empleado creado:', res);
+//             // Resetear formulario o redireccionar
+//           },
+//           error: (err) => {
+//             console.error('Error:', err);
+//           }
+//         });
+//     }
+//   }
+
+
+ mensaje = '';
+  errores: string[] = [];
+
+  onSubmit() {
+    if (this.formEmpleado.invalid) {
+      this.formEmpleado.markAllAsTouched();
+      return;
     }
+    const trabajador: Trabajador = this.formEmpleado.value as Trabajador;
+    this.trabajadoresService.crearTrabajador(trabajador).subscribe({
+      next: res => {
+        this.mensaje = res.message || 'Trabajador creado';
+        this.errores = [];
+        this.formEmpleado.reset();
+      },
+      error: err => {
+        this.mensaje = err.error?.message || 'Error';
+        this.errores = err.error?.errors?.map((e: any) => e.msg) || [];
+      }
+    });
   }
 
  

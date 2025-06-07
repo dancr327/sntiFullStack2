@@ -5,8 +5,28 @@ import { routes } from './app.routes';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { Component, OnInit } from '@angular/core';
 import { provideAnimations } from '@angular/platform-browser/animations';
-import { provideHttpClient } from '@angular/common/http';
-
+import { provideHttpClient, withInterceptorsFromDi} from '@angular/common/http';
+// Importar el interceptor de autenticación
+import { AuthInterceptor } from './core/interceptors/auth.interceptor';
+import { inject as angularInject } from '@angular/core';
+import { HTTP_INTERCEPTORS } from '@angular/common/http';
 export const appConfig: ApplicationConfig = {
-  providers: [provideRouter(routes), provideAnimationsAsync(), provideAnimations(), provideHttpClient(), provideAnimationsAsync(), provideAnimationsAsync()]
+  providers: [
+    provideRouter(routes), 
+    provideAnimationsAsync(), 
+    provideAnimations(), 
+    provideHttpClient(), 
+    provideAnimationsAsync(), 
+    provideAnimationsAsync(),
+    provideHttpClient(),
+    provideHttpClient(
+      withInterceptorsFromDi()
+    ),
+     {
+      provide: HTTP_INTERCEPTORS,
+      useClass: AuthInterceptor,
+      multi: true
+    }
+  ]
 };
+

@@ -13,9 +13,12 @@ export const routes: Routes = [
         path: 'admin', loadComponent: () => import('./components/admin/admin.component').then(m => m.AdminComponent),
         children: [
     { path: '', loadComponent: () => import('./components/home/home.component').then(m => m.HomeComponent) }, // Home del usuario (si tienes uno)
-    {path: 'admindocumentos', loadComponent: () => import('./components/admin/documentos/documentos.component').then(m => m.DocumentosComponent)},		
+    {path: 'admindocumentos', loadComponent: () => import('./components/admin/documentos/documentos.component').then(m => m.DocumentosComponent)},
+
     {path: 'admintrabajadores', loadComponent: () => import('./components/admin/trabajadores/trabajadores.component').then(m => m.TrabajadoresComponent)},
                 {path: 'registroempleado', loadComponent: () => import('./components/admin/registro-empleado/registro-empleado.component').then(m => m.RegistroEmpleadoComponent)},
+
+
     {path: 'adminsanciones', loadComponent: () => import('./components/admin/sanciones/sanciones.component').then(m => m.SancionesComponent)},
     {path: 'adminpermisos', loadComponent: () => import('./components/admin/permisos/permisos.component').then(m => m.PermisosComponent)},
     {path: 'adminauditorias', loadComponent: () => import('./components/admin/auditorias/auditorias.component').then(m => m.AuditoriasComponent)},
@@ -30,23 +33,6 @@ export const routes: Routes = [
         ]
     },
 
-
-    //admin routes viejas
-    // {path: 'admin', loadComponent: () => import('./components/admin/admin.component').then(m => m.AdminComponent)},
-    // {path: 'documentos', loadComponent: () => import('./components/admin/documentos/documentos.component').then(m => m.DocumentosComponent)},		
-    // {path: 'trabajadores', loadComponent: () => import('./components/admin/trabajadores/trabajadores.component').then(m => m.TrabajadoresComponent)},
-    // {path: 'registroempleado', loadComponent: () => import('./components/admin/registro-empleado/registro-empleado.component').then(m => m.RegistroEmpleadoComponent)},
-    // {path: 'sanciones', loadComponent: () => import('./components/admin/sanciones/sanciones.component').then(m => m.SancionesComponent)},
-    // {path: 'permisos', loadComponent: () => import('./components/admin/permisos/permisos.component').then(m => m.PermisosComponent)},
-    // {path: 'auditorias', loadComponent: () => import('./components/admin/auditorias/auditorias.component').then(m => m.AuditoriasComponent)},
-    //         //SECRETARIAS
-    //             {path: 'trabajoconflictos', loadComponent: () => import('./components/admin/trabajo-conflictos/trabajo-conflictos.component').then(m => m.TrabajoConflictosComponent)},
-    //             {path: 'finanzas', loadComponent: () => import('./components/admin/finanzas/finanzas.component').then(m => m.FinanzasComponent)},
-    //             {path: 'escalafon', loadComponent: () => import('./components/admin/escalafon/escalafon.component').then(m => m.EscalafonComponent)},
-    //             {path: 'actasacuerdos', loadComponent: () => import('./components/admin/organizacion-actas-acuerdos/organizacion-actas-acuerdos.component').then(m => m.OrganizacionActasAcuerdosComponent)},
-    //             {path: 'prestaciones', loadComponent: () => import('./components/admin/prestaciones/prestaciones.component').then(m => m.PrestacionesComponent)},
-    //             {path: 'formacionC', loadComponent: () => import('./components/admin/formacion-capacitacion/formacion-capacitacion.component').then(m => m.FormacionCapacitacionComponent)},
-
     //user routes NUEVAS para danielsidebar nueva
     {
         path: 'user', loadComponent: () => import('./components/user/user.component').then(m => m.UserComponent),
@@ -60,12 +46,6 @@ export const routes: Routes = [
             // ...otros componentes de usuario
         ]
     },
-//rutas de usarui antiguas
-        // {path: 'user', loadComponent: () => import('./components/user/user.component').then(m => m.UserComponent)},
-        // {path: 'userpermiso', loadComponent: () => import('./components/user/userpermiso/userpermiso.component').then(m => m.UserpermisoComponent)},
-        // {path: 'usersanciones', loadComponent: () => import('./components/user/usersanciones/usersanciones.component').then(m => m.UsersancionesComponent)},
-        // {path: 'userdocumentos', loadComponent: () => import('./components/user/userdocumentos/userdocumentos.component').then(m => m.UserdocumentosComponent)},
-        // {path: 'userhijos', loadComponent: () => import('./components/user/userhijos/userhijos.component').then(m => m.UserhijosComponent)},
 
     //shared routes
     {path: 'secciones-sindicales', loadComponent: () => import('./components/secciones-sindicales/secciones-sindicales.component').then(m => m.SeccionesSindicalesComponent)},

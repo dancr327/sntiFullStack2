@@ -1,16 +1,13 @@
 import { Component,  OnInit } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
-import { RouterLink } from '@angular/router';
-import { AdminbarraComponent } from '../adminbarra/adminbarra.component';
+import { RouterLink, RouterOutlet } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { NgIf } from '@angular/common';
-import { RegistroEmpleadoComponent } from '../registro-empleado/registro-empleado.component';
-
 
 @Component({
   selector: 'app-trabajadores',
   standalone: true,
-  imports: [MatIconModule, RouterLink, AdminbarraComponent, FormsModule,  NgIf, RegistroEmpleadoComponent ],
+  imports: [MatIconModule, RouterLink, FormsModule,  RouterOutlet ],
   templateUrl: './trabajadores.component.html',
   styleUrl: './trabajadores.component.css'
 })
@@ -29,7 +26,7 @@ export class TrabajadoresComponent implements OnInit {
       this.trabajadoresFiltrados = [...this.trabajadores];
       return;
     }
-    
+
     const termino = this.filtroBusqueda.toLowerCase();
     this.trabajadoresFiltrados = this.trabajadores.filter(t =>
       t.nombre.toLowerCase().includes(termino) ||

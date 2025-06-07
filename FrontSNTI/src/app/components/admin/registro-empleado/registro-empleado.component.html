@@ -1,3 +1,4 @@
+
 <div class="card">
   <div class="card-body">
     <!-- Formulario bonito -->
@@ -14,6 +15,34 @@
         (ngSubmit)="mostarDatos()"
         (ngSubmit)="onSubmit()"
       >
+        <div class="form-group">
+          <label>*identificador</label>
+          <input
+            type="text"
+            id="identificador"
+            formControlName="identificador"
+          />
+          <small
+            *ngIf="identificador.invalid && identificador.touched"
+            class="error"
+          >
+            El identificador es obligatorio.
+          </small>
+        </div>
+        <div class="form-group">
+          <label>*Contraseña</label>
+          <input
+            type="text"
+            id="contraseña"
+            formControlName="contraseña"
+          />
+          <small
+            *ngIf="contrasena.invalid && contrasena.touched"
+            class="error"
+          >
+            El contraseña es obligatorio.
+          </small>
+        </div>
         <!-- Nombre completo -->
         <div class="form-group">
           <label>*Nombre</label>
@@ -155,7 +184,7 @@
           </small>
         </div>
         <div class="form-group">
-          <label>*Número de Hijos</label>
+          <label>Número de Hijos</label>
           <input
             type="number"
             min="0"
@@ -254,11 +283,7 @@
         </div>
         <div class="form-group">
           <label>*Nivel de Puesto</label>
-          <input
-            type="text"
-            id="nivel_puesto"
-            formControlName="nivel_puesto"
-          />
+          <input type="text" id="nivel_puesto" formControlName="nivel_puesto" />
           <small
             *ngIf="nivel_puesto.invalid && nivel_puesto.touched"
             class="error"
@@ -301,7 +326,7 @@
             La adscripcion es obligatoria.
           </small>
         </div>
-        
+
         <div class="form-group">
           <label>*Id de seccion</label>
           <input
@@ -313,8 +338,7 @@
           />
           <div
             *ngIf="
-              id_seccion.invalid &&
-              (id_seccion.dirty || id_seccion.touched)
+              id_seccion.invalid && (id_seccion.dirty || id_seccion.touched)
             "
           >
             <span *ngIf=" id_seccion.errors?.['required']"
@@ -374,7 +398,7 @@
             La Plaza Base es obligatoria.
           </small>
         </div>
-        <div class="form-group">
+        <!-- <div class="form-group">
           <label>Fecha de Actualización</label>
           <input
             type="date"
@@ -389,7 +413,7 @@
           >
             La fecha debe estar entre el 1 de enero de 2024 y hoy.
           </small>
-        </div>
+        </div> -->
 
         <!-- Botón de registro -->
 

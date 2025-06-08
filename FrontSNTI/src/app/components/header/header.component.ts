@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
-
+import { Router } from '@angular/router';
+import { AuthService } from '../../core/services/auth.service';
 
 
 
@@ -15,5 +16,19 @@ import { RouterLink } from '@angular/router';
 
 export class HeaderComponent {
 
-
+constructor(private router: Router, public authService: AuthService) {}
+goHome() {
+    if (this.authService.isLoggedIn()) {
+      const role = this.authService.getUserRole();
+      if (role === 'ADMINISTRADOR') {
+        this.router.navigate(['/admin']);
+      } else if (role === 'USUARIO') {
+        this.router.navigate(['/user']);
+      } else {
+        this.router.navigate(['/']); // Por si acaso
+      }
+    } else {
+      this.router.navigate(['/']);
+    }
+  }
 }

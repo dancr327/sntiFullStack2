@@ -1,6 +1,6 @@
 import { Routes, RouterModule } from '@angular/router';
 import { Component, OnInit } from '@angular/core';
-
+import { roleGuard } from './core/guards/role.guard';
 export const routes: Routes = [
     // otras rutas
     {path: '', // Ruta raíz (por defecto)
@@ -11,6 +11,9 @@ export const routes: Routes = [
             //user routes NUEVAS para danielsidebar nueva
     {
         path: 'admin', loadComponent: () => import('./components/admin/admin.component').then(m => m.AdminComponent),
+        // Aquí se aplica el roleGuard para proteger las rutas de admin
+        canActivate: [roleGuard],
+        data: { expectedRole: 'ADMINISTRADOR',},
         children: [
     { path: '', loadComponent: () => import('./components/home/home.component').then(m => m.HomeComponent) }, // Home del usuario (si tienes uno)
     {path: 'admindocumentos', loadComponent: () => import('./components/admin/documentos/documentos.component').then(m => m.DocumentosComponent)},
@@ -36,6 +39,9 @@ export const routes: Routes = [
     //user routes NUEVAS para danielsidebar nueva
     {
         path: 'user', loadComponent: () => import('./components/user/user.component').then(m => m.UserComponent),
+        // Aquí se aplica el roleGuard para proteger las rutas de usuario
+        canActivate: [roleGuard],
+        data: { expectedRole: 'USUARIO' },
         children: [
             { path: '', loadComponent: () => import('./components/home/home.component').then(m => m.HomeComponent) }, // Home del usuario (si tienes uno)
             { path: 'userpermiso', loadComponent: () => import('./components/user/userpermiso/userpermiso.component').then(m => m.UserpermisoComponent) },

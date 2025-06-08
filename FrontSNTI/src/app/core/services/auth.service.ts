@@ -48,5 +48,11 @@ login(credentials: { identificador: string, contraseña: string }): Observable<a
       this.currentUserSubject.next(JSON.parse(userStr));
     }
   }
+//Este método obtiene el rol del usuario actual desde el token o el objeto de usuario almacenado
+//NO SE si es el mismo metodo que get currentUser, pero lo dejo por si acaso
+  getUserRole(): string | null {
+  const user = this.currentUser;
+  return user?.rol || null; // Ajusta 'rol' al nombre exacto en tu modelo Usuario
+}
 
 }

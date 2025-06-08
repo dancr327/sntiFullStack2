@@ -2,7 +2,7 @@ import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-
+import { AuthService } from '../../../core/services/auth.service' //importo el servicio de autenticación para cerrar sesión
 @Component({
   selector: 'app-daniel-sidebar',
   standalone: true,
@@ -18,4 +18,10 @@ export class DanielSidebarComponent {
     onOverlayClick() {
     this.closeSidebar.emit();
   }
+
+  constructor(private authService: AuthService) {}
+  logout() {
+    this.authService.logout();
+  }
+  
 }

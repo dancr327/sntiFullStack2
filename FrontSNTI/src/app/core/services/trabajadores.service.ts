@@ -12,4 +12,7 @@ export class TrabajadoresService {
   crearTrabajador(trabajador: Trabajador): Observable<any> {
     return this.http.post(this.apiUrl, trabajador);
   }
+  getMiPerfil(): Observable<any> {
+  return this.http.get(`${this.apiUrl}/mi-perfil`);
+}
 }

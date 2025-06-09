@@ -8,44 +8,52 @@
       alt="Foto de perfil"
     />
   
-    <form [formGroup]="perfilForm" class="perfil-formulario">
-      <div class="campo">
-        <label>Nombre:</label>
-        <input type="text" formControlName="nombre" />
-      </div>
-  
-      <div class="campo">
-        <label>Fecha de Nacimiento:</label>
-        <input type="date" formControlName="fechaNacimiento" />
-      </div>
-  
-      <div class="campo">
-        <label>Apellido Paterno:</label>
-        <input type="text" formControlName="apellidoPaterno" />
-      </div>
-  
-      <div class="campo">
-        <label>RFC:</label>
-        <input type="text" formControlName="rfc" />
-      </div>
-  
-      <div class="campo">
-        <label>Apellido Materno:</label>
-        <input type="text" formControlName="apellidoMaterno" />
-      </div>
-  
-      <div class="campo">
-        <label>CURP:</label>
-        <input type="text" formControlName="curp" />
-      </div>
-    </form>
+<form [formGroup]="perfilForm" class="perfil-formulario">
+  <div class="campo">
+    <label>Nombre:</label>
+    <input type="text" formControlName="nombre" />
+  </div>
+  <div class="campo">
+    <label>Fecha de Nacimiento:</label>
+    <input type="date" formControlName="fecha_nacimiento" />
+  </div>
+  <div class="campo">
+    <label>Apellido Paterno:</label>
+    <input type="text" formControlName="apellido_paterno" />
+  </div>
+  <div class="campo">
+    <label>Email:</label>
+    <input type="text" formControlName="email" />
+  </div>
+  <div class="campo">
+    <label>Apellido Materno:</label>
+    <input type="text" formControlName="apellido_materno" />
+  </div>
+  <div class="campo">
+    <label>CURP:</label>
+    <input type="text" formControlName="curp" />
+  </div>
+  <div class="campo">
+    <label>Numero de plaza:</label>
+    <input type="text" formControlName="numero_plaza" />
+  </div>
+  <div class="campo">
+    <label>Numero de empleado:</label>
+    <input type="text" formControlName="numero_empleado" />
+  </div>
+  <div class="campo">
+    <label>Nombre puesto:</label>
+    <input type="text" formControlName="nombre_puesto" />
+  </div>
+  <div class="campo">
+    <label>Puesto inpi:</label>
+    <input type="text" formControlName="puesto_inpi" />
+  </div>
+</form>
   
     <button class="boton" (click)="toggleEdit()">
       Solicitar Modificación
     </button>
     <div class="espaciador">
-    <button class="boton" [routerLink]="['/perfil-admin']">
-      Ver version de administrador
-    </button>
   </div>
   </div>

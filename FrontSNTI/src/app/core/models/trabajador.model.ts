@@ -1,5 +1,6 @@
 // core/models/trabajador.model.ts
 export interface Trabajador {
+  id_trabajador: number;
   identificador: string;
   contraseña: string; // sólo para crear/actualizar
   rol?: 'ADMINISTRADOR' | 'USUARIO';
@@ -26,4 +27,15 @@ export interface Trabajador {
   institucion_estudios?: string;
   certificado_estudios?: boolean;
   plaza_base?: string;
+  //datos adicionales
+
+  fecha_creacion?: string;
+  ultimo_login?: string;
+  fecha_actualizacion?: string;
+  
+  // ¡Esto es importante! Relación con secciones:
+  seccion?: {
+    nombre_seccion: string;
+    descripcion?: string;
+  };
 }

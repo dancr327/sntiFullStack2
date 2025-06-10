@@ -1,41 +1,114 @@
 import { Component,  OnInit } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
-import { RouterLink, RouterOutlet } from '@angular/router';
+import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { NgIf } from '@angular/common';
+// Importa servicio y modelo de trabajadores
+import { TrabajadoresService } from '../../../core/services/trabajadores.service';
+import { Trabajador } from '../../../core/models/trabajador.model';
+import { NgClass, CommonModule } from '@angular/common';
+// Importa servicio y modelo de secciones
+import { SeccionesService } from '../../../core/services/secciones.service';
+import { Seccion } from '../../../core/models/seccion.model';
 
 @Component({
   selector: 'app-trabajadores',
   standalone: true,
-  imports: [MatIconModule, RouterLink, FormsModule,  RouterOutlet ],
+  imports: [MatIconModule, RouterLink, FormsModule, NgClass, CommonModule],
   templateUrl: './trabajadores.component.html',
   styleUrl: './trabajadores.component.css'
 })
 export class TrabajadoresComponent implements OnInit {
+  trabajadores: Trabajador[] = [];        // Aquí estará tu lista general de trabajadores
+  trabajadoresFiltrados: Trabajador[] = []; // Para el filtro del buscador
+  secciones: Seccion[] = []; // Aquí estará tu lista de secciones
+
+  // Variables para el filtro de búsqueda
   filtroBusqueda: string = '';
-  trabajadores: any[] = [];
-  trabajadoresFiltrados: any[] = [];
+  filtroRol: string = '';
+  filtroSeccion: number | '' = ''; 
+  filtroSexo: string = '';
+
+  constructor(
+    private trabajadoresService: TrabajadoresService, 
+    private seccionesService: SeccionesService) {}
 
   ngOnInit(): void {
-    
-    
+    this.cargarTrabajadores();
+     this.seccionesService.getSecciones().subscribe({
+    next: (resp) => {
+      if (resp.success) {
+        this.secciones = resp.data;
+      }
+    },
+    error: err => console.error('Error cargando secciones', err)
+  });
+  }
+
+  cargarTrabajadores(): void {
+
+    this.trabajadoresService.getTrabajadores().subscribe({
+      next: (resp) => {
+        // Asegúrate de que resp.data es el array de trabajadores según tu API
+        this.trabajadores = resp.data || [];
+        this.trabajadoresFiltrados = [...this.trabajadores];
+      },
+      error: (err) => {
+        console.error('Error al obtener trabajadores:', err);
+        this.trabajadores = [];
+        this.trabajadoresFiltrados = [];
+      }
+    });
   }
 
   filtrarTrabajadores(): void {
-    if (!this.filtroBusqueda) {
-      this.trabajadoresFiltrados = [...this.trabajadores];
-      return;
+  const filtroBusquedaLower = this.filtroBusqueda.toLowerCase().trim();
+
+  this.trabajadoresFiltrados = this.trabajadores.filter(t => {
+    // Filtro general por texto
+    const coincideBusqueda =
+      (t.nombre + ' ' + t.apellido_paterno + ' ' + (t.apellido_materno || '')).toLowerCase().includes(filtroBusquedaLower) ||
+      t.email.toLowerCase().includes(filtroBusquedaLower) ||
+      t.curp.toLowerCase().includes(filtroBusquedaLower) ||
+      t.numero_empleado.toLowerCase().includes(filtroBusquedaLower) ||
+      t.numero_plaza.toLowerCase().includes(filtroBusquedaLower);
+
+    // Filtro por sección
+    let coincideSeccion = true;
+    if (this.filtroSeccion !== '' && this.filtroSeccion !== null && this.filtroSeccion !== undefined) {
+      coincideSeccion = t.id_seccion === Number(this.filtroSeccion);
     }
 
-    const termino = this.filtroBusqueda.toLowerCase();
-    this.trabajadoresFiltrados = this.trabajadores.filter(t =>
-      t.nombre.toLowerCase().includes(termino) ||
-      t.apellido.toLowerCase().includes(termino) ||
-      t.puesto.toLowerCase().includes(termino) ||
-      t.departamento.toLowerCase().includes(termino) ||
-      t.email.toLowerCase().includes(termino) ||
-      t.telefono.includes(termino)
-    );
+    return coincideBusqueda && coincideSeccion;
+  });
+}
+
+
+  // Ejemplo de funciones para los botones (puedes implementar la lógica que necesites)
+
+detalleTrabajador: Trabajador | null = null;
+verTrabajador(id: number) {
+  this.trabajadoresService.getTrabajadorPorId(id).subscribe({
+    next: (resp) => {
+      this.detalleTrabajador = resp.data; // Ajusta si tu backend retorna otro formato
+    },
+    error: (err) => {
+      this.detalleTrabajador = null;
+      alert('No se pudo cargar el trabajador.');
+    }
+  });
+}
+
+
+  editarTrabajador(id: number) {
+    // Lógica para editar
+    console.log('Editar trabajador', id);
   }
 
+  eliminarTrabajador(id: number) {
+    // Lógica para eliminar
+    console.log('Eliminar trabajador', id);
+  }
+
+
+  
 }

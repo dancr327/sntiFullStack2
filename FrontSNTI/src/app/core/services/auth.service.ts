@@ -33,11 +33,12 @@ login(credentials: { identificador: string, contraseña: string }): Observable<a
   get currentUser(): Usuario | null {
     return this.currentUserSubject.value;
   }
-
+//Este método obtiene el token del almacenamiento local
+  // y devuelve null si no hay token almacenado
   getToken(): string | null {
     return localStorage.getItem('token');
   }
-
+//utilizo el metodo getToken de arriba para verificar si el usuario está logueado
   isLoggedIn(): boolean {
     return !!this.getToken();
   }

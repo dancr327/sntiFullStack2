@@ -24,9 +24,9 @@ export class TrabajadoresComponent implements OnInit {
 
   // Variables para el filtro de búsqueda
   filtroBusqueda: string = '';
-  filtroRol: string = '';
+  // filtroRol: string = '';
   filtroSeccion: number | '' = ''; 
-  filtroSexo: string = '';
+  // filtroSexo: string = '';
 
   constructor(
     private trabajadoresService: TrabajadoresService, 

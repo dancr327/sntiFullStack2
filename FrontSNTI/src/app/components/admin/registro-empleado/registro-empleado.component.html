@@ -1,5 +1,6 @@
 <div class="registro-container">
-  <h2 class="registro-title">Registro de Trabajador</h2>
+  <h2 class="registro-title" *ngIf="!trabajadorEdit">Registro de Trabajador</h2>
+  <h2 class="registro-title" *ngIf="trabajadorEdit">Editar trabajador</h2>
   <form class="registro-form" [formGroup]="formEmpleado" (ngSubmit)="onSubmit()">
     <!-- MENSAJES DE ALERTA -->
     <div *ngIf="mensajeExito" class="alert alert-success">{{ mensajeExito }}</div>
@@ -215,12 +216,22 @@
     <!-- ============ BOTÓN ============ -->
     <div class="form-actions">
       <button type="submit"
+        *ngIf="!trabajadorEdit"
         [disabled]="formEmpleado.invalid || loading"
         [ngClass]="{
           'btn-valido': formEmpleado.valid && !loading,
           'btn-invalido': formEmpleado.invalid || loading
         }">
         {{ loading ? 'Registrando...' : 'Registrar' }}
+      </button>
+            <button type="submit"
+        *ngIf="trabajadorEdit"
+        [disabled]="formEmpleado.invalid || loading"
+        [ngClass]="{
+          'btn-valido': formEmpleado.valid && !loading,
+          'btn-invalido': formEmpleado.invalid || loading
+        }">
+        {{ loading ? 'Guardando cambios...' : 'Guardar cambios' }}
       </button>
     </div>
   </form>

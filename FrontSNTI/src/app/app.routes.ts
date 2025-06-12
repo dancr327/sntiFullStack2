@@ -20,7 +20,7 @@ export const routes: Routes = [
 
     {path: 'admintrabajadores', loadComponent: () => import('./components/admin/trabajadores/trabajadores.component').then(m => m.TrabajadoresComponent)},
                 {path: 'registroempleado', loadComponent: () => import('./components/admin/registro-empleado/registro-empleado.component').then(m => m.RegistroEmpleadoComponent)},
-
+                {path: 'editar-trabajador/:id', loadComponent: () => import('./components/admin/registro-empleado/registro-empleado.component').then(m => m.RegistroEmpleadoComponent)},
 
     {path: 'adminsanciones', loadComponent: () => import('./components/admin/sanciones/sanciones.component').then(m => m.SancionesComponent)},
     {path: 'adminpermisos', loadComponent: () => import('./components/admin/permisos/permisos.component').then(m => m.PermisosComponent)},

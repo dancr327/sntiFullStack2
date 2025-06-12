@@ -1,10 +1,11 @@
 // registro-empleado.component.ts
-import { Component } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { TrabajadoresService } from '../../../core/services/trabajadores.service';
 import { Trabajador } from '../../../core/models/trabajador.model';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router'; // Importa ActivatedRoute para obtener parámetros de la ruta
 
 // Validadores personalizados
 function emailsIgualesValidator(group: AbstractControl): ValidationErrors | null {
@@ -26,13 +27,15 @@ function passwordsIgualesValidator(group: AbstractControl): ValidationErrors | n
   imports: [CommonModule, ReactiveFormsModule],
   providers: [TrabajadoresService]
 })
-export class RegistroEmpleadoComponent {
+export class RegistroEmpleadoComponent implements OnInit {
+  // Variables para manejar el estado del formulario
   loading = false;
   mensajeExito = '';
   mensajeError = '';
   certificadoNombre: string = '';
   id_seccion_valor = 1;
   mensajeErroresCampos: { [key: string]: string } = {};
+  trabajadorEdit: Trabajador | null = null; // Para editar un trabajador existente
 
   formEmpleado = this.fb.group({
     emailGroup: this.fb.group({
@@ -88,7 +91,11 @@ export class RegistroEmpleadoComponent {
   get emailGroup() { return this.formEmpleado.get('emailGroup'); }
   get passwordGroup() { return this.formEmpleado.get('passwordGroup'); }
 
-  constructor(private fb: FormBuilder, private trabajadoresService: TrabajadoresService) {}
+  constructor(
+    private fb: FormBuilder, 
+    private trabajadoresService: TrabajadoresService,
+    private route: ActivatedRoute // <---- aquí
+  ) {}
 
   onFileChange(event: any) {
     if (event.target.files.length > 0) {
@@ -174,7 +181,30 @@ export class RegistroEmpleadoComponent {
       plaza_base: this.formEmpleado.value.plaza_base ?? '',
       // Agregamos la contraseña al body POST:
     };
-
+    
+  const passValue = this.contrasena?.value;
+  if (!this.trabajadorEdit || passValue) {
+    // En creación, siempre se incluye. En edición, solo si el admin escribe una nueva.
+    data['contraseña'] = passValue ?? '';
+  }
+    // condicional para editar un trabajador existente
+    if (this.trabajadorEdit) {
+    // --- EDICIÓN ---
+    const id = this.trabajadorEdit.id_trabajador;
+    this.trabajadoresService.actualizarTrabajador(id, data).subscribe({
+      next: () => {
+        this.mensajeExito = '¡Trabajador actualizado exitosamente!';
+        this.loading = false;
+        // O redirige/cierra modal, etc.
+      },
+      error: (err) => {
+        this.loading = false;
+        this.mensajeError = err.error?.message || 'Error al actualizar el trabajador.';
+      }
+    });
+  } else {
+    // --- CREACIÓN ---
+    // Si no hay trabajadorEdit, es un nuevo registro
     this.trabajadoresService.crearTrabajador(data).subscribe({
       next: (trabajador) => {
         this.mensajeExito = '¡Trabajador registrado exitosamente!';
@@ -194,6 +224,7 @@ export class RegistroEmpleadoComponent {
       }
     });
   }
+  }
 
   private resetearFormulario() {
     this.formEmpleado.reset({
@@ -204,5 +235,81 @@ export class RegistroEmpleadoComponent {
     });
     this.certificadoNombre = '';
     this.mensajeErroresCampos = {};
+  }
+
+// Método para configurar el formulario con los datos del trabajador a editar
+setFormForEdit(trabajador: Trabajador) {
+  // Si tienes validadores de emails/contraseñas, pon el email y deshabilita los grupos de password si es edición
+  this.formEmpleado.patchValue({
+    emailGroup: {
+      email: trabajador.email,
+      email2: trabajador.email,
+    },
+    // No mostramos ni pedimos la contraseña al editar
+    passwordGroup: {
+      contrasena: '',
+      contrasena2: '',
+    },
+    rol: trabajador.rol,
+    nombre: trabajador.nombre,
+    apellido_paterno: trabajador.apellido_paterno,
+    apellido_materno: trabajador.apellido_materno,
+    fecha_nacimiento: trabajador.fecha_nacimiento ? trabajador.fecha_nacimiento.slice(0,10) : '',
+    sexo: trabajador.sexo,
+    curp: trabajador.curp,
+    rfc: trabajador.rfc,
+    situacion_sentimental: trabajador.situacion_sentimental,
+    numero_hijos: trabajador.numero_hijos,
+    numero_empleado: trabajador.numero_empleado,
+    numero_plaza: trabajador.numero_plaza,
+    fecha_ingreso: trabajador.fecha_ingreso ? trabajador.fecha_ingreso.slice(0,10) : '',
+    fecha_ingreso_gobierno: trabajador.fecha_ingreso_gobierno ? trabajador.fecha_ingreso_gobierno.slice(0,10) : '',
+    nivel_puesto: trabajador.nivel_puesto,
+    nombre_puesto: trabajador.nombre_puesto,
+    puesto_inpi: trabajador.puesto_inpi,
+    adscripcion: trabajador.adscripcion,
+    id_seccion: trabajador.id_seccion,
+    nivel_estudios: trabajador.nivel_estudios,
+    institucion_estudios: trabajador.institucion_estudios,
+    certificado_estudios: trabajador.certificado_estudios,
+    plaza_base: trabajador.plaza_base,
+  });
+  // Opcionalmente puedes deshabilitar email/curp/numero_empleado/numero_plaza si no quieres que se modifiquen en edición
+  this.formEmpleado.get('emailGroup.email')?.disable();
+  this.formEmpleado.get('emailGroup.email2')?.disable();
+  
+}
+
+  // Métodos para manejar la edición de un trabajador
+  ngOnInit() {
+ // 1. Checa si hay id en la ruta
+    const id = this.route.snapshot.paramMap.get('id');
+    if (id) {
+
+    this.formEmpleado.get('passwordGroup.contrasena')?.clearValidators();
+    this.formEmpleado.get('passwordGroup.contrasena2')?.clearValidators();
+    this.formEmpleado.get('passwordGroup')?.updateValueAndValidity();
+
+      // 2. Obtén los datos del trabajador
+      this.trabajadoresService.getTrabajadorPorId(+id).subscribe({
+        next: resp => {
+          if (resp.success && resp.data) {
+            this.trabajadorEdit = resp.data;
+            if (this.trabajadorEdit) {
+              this.setFormForEdit(this.trabajadorEdit); // Prellena formulario
+            }
+          }
+        },
+        error: err => {
+          // Redirige o muestra mensaje si no existe el trabajador
+        }
+      });
+    }
+    else {
+      //me seguro de que la contraseña sea requerida al crear un nuevo trabajador
+    this.formEmpleado.get('passwordGroup.contrasena')?.setValidators([Validators.required, Validators.minLength(6)]);
+    this.formEmpleado.get('passwordGroup.contrasena2')?.setValidators([Validators.required, Validators.minLength(6)]);
+    this.formEmpleado.get('passwordGroup')?.updateValueAndValidity();
+    }
   }
 }

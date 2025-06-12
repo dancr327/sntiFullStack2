@@ -29,4 +29,9 @@ export class TrabajadoresService {
 getTrabajadorPorId(id: number): Observable<any> {
   return this.http.get(`http://localhost:3000/trabajadores/${id}`);
 }
+
+actualizarTrabajador(id: number, trabajador: any): Observable<any> {
+  return this.http.put(`${this.apiUrl}/${id}`, trabajador);
+}
+
 }

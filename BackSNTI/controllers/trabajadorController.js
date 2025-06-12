@@ -13,7 +13,13 @@ const validarTrabajador = [
         .isLength({ max: 150 }).withMessage('El identificador no puede exceder 150 caracteres'),
     body('contraseña')
         .optional()
-        .isLength({ min: 6 }).withMessage('La contraseña debe tener al menos 6 caracteres'),
+        .custom(value => {
+    // Si viene como undefined o null, o string vacía, es válido (no se actualiza la contraseña)
+    if (value === undefined || value === null || value === '') return true;
+    // Si tiene valor, debe tener al menos 6 caracteres
+    if (value.length < 6) throw new Error('La contraseña debe tener al menos 6 caracteres');
+    return true;
+  }),
     body('rol').optional().isIn([Roles.ADMINISTRADOR, Roles.USUARIO]).withMessage('Rol no válido. Debe ser ADMINISTRADOR o USUARIO.'),
     body('nombre').optional().isLength({ max: 100 }).withMessage('El nombre no puede exceder 100 caracteres.'),
     body('apellido_paterno').optional().isLength({ max: 100 }).withMessage('El apellido paterno no puede exceder 100 caracteres.'),
@@ -422,6 +428,9 @@ const obtenerTrabajadorPorId = async (req, res) => {
  * @param {object} res - Objeto de respuesta de Express.
  */
 const actualizarTrabajador = async (req, res) => {
+
+    console.log('Body recibido:', req.body); //cada vez que te llegue una petición PUT/PATCH, verás el contenido real de lo que llega.
+
     try {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -464,10 +473,11 @@ const actualizarTrabajador = async (req, res) => {
         const dataToUpdate = {};
 
         if (identificador !== undefined) dataToUpdate.identificador = identificador;
-        if (contraseña !== undefined) {
-            const saltRounds = 12;
-            dataToUpdate.contraseña_hash = await bcrypt.hash(contraseña, saltRounds);
-        }
+        
+        if (contraseña !== undefined && contraseña.trim() !== '') {
+    const saltRounds = 12;
+    dataToUpdate.contraseña_hash = await bcrypt.hash(contraseña, saltRounds);
+}
         if (rol !== undefined) dataToUpdate.rol = rol;
         if (nombre !== undefined) dataToUpdate.nombre = nombre;
         if (apellido_paterno !== undefined) dataToUpdate.apellido_paterno = apellido_paterno;

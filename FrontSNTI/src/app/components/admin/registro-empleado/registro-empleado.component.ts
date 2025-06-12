@@ -1,6 +1,6 @@
 // registro-empleado.component.ts
-import { Component, Input, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
+import { Component, OnInit } from '@angular/core';
+import { FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors, NgModel } from '@angular/forms';
 import { TrabajadoresService } from '../../../core/services/trabajadores.service';
 import { Trabajador } from '../../../core/models/trabajador.model';
 import { CommonModule } from '@angular/common';
@@ -24,7 +24,7 @@ function passwordsIgualesValidator(group: AbstractControl): ValidationErrors | n
   standalone: true,
   templateUrl: './registro-empleado.component.html',
   styleUrl: './registro-empleado.component.css',
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule,],
   providers: [TrabajadoresService]
 })
 export class RegistroEmpleadoComponent implements OnInit {
@@ -182,11 +182,17 @@ export class RegistroEmpleadoComponent implements OnInit {
       // Agregamos la contraseña al body POST:
     };
     
-  const passValue = this.contrasena?.value;
-  if (!this.trabajadorEdit || passValue) {
-    // En creación, siempre se incluye. En edición, solo si el admin escribe una nueva.
-    data['contraseña'] = passValue ?? '';
-  }
+  // const passValue = this.contrasena?.value;
+  // if (!this.trabajadorEdit || passValue) {
+  //   // En creación, siempre se incluye. En edición, solo si el admin escribe una nueva.
+  //   data['contraseña'] = passValue ?? '';
+  // }
+// Solo incluir contraseña si el usuario ingresó algo en los campos
+const password = this.contrasena?.value?.trim();
+if (password && password.length >= 6) {
+  data.contraseña = password;
+}
+
     // condicional para editar un trabajador existente
     if (this.trabajadorEdit) {
     // --- EDICIÓN ---
@@ -312,4 +318,5 @@ setFormForEdit(trabajador: Trabajador) {
     this.formEmpleado.get('passwordGroup')?.updateValueAndValidity();
     }
   }
+
 }

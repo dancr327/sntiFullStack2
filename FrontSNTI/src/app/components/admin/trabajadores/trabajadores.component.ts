@@ -111,7 +111,21 @@ editarTrabajador(id: number) {
 }
 
   eliminarTrabajador(id: number) {
-    // Lógica para eliminar
-    console.log('Eliminar trabajador', id);
+    // Mensaje de confirmación (puedes mejorar con un modal)
+  if (!confirm('¿Estás seguro de que deseas eliminar este trabajador?')) {
+    return;
+  }
+  this.trabajadoresService.eliminarTrabajador(id).subscribe({
+    next: () => {
+      // Elimina localmente para feedback inmediato:
+      this.trabajadores = this.trabajadores.filter(t => t.id_trabajador !== id);
+      this.filtrarTrabajadores(); // Aplica el filtro actualizado
+      alert('Trabajador eliminado exitosamente');
+    },
+    error: (err) => {
+      console.error('Error al eliminar trabajador:', err);
+      alert('No se pudo eliminar el trabajador. Intenta nuevamente.');
+    }
+  });
   }
 }

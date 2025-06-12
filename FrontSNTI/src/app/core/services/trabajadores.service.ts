@@ -33,5 +33,10 @@ getTrabajadorPorId(id: number): Observable<any> {
 actualizarTrabajador(id: number, trabajador: any): Observable<any> {
   return this.http.put(`${this.apiUrl}/${id}`, trabajador);
 }
+// trabajadores.componente.ts (admin)
+eliminarTrabajador(id: number) {
+  return this.http.delete<any>(`${this.apiUrl}/${id}`);
+}
+
 
 }

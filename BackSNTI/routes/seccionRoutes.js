@@ -1,17 +1,18 @@
 // routes/seccionRoutes.js
 const express = require('express');
 const router = express.Router();
-const { check, param } = require('express-validator');
+const { param } = require('express-validator');
 const { verifyToken } = require('../middleware/auth');
 const { hasRole } = require('../middleware/authorization');
 const Roles = require('../enums/roles.enum');
 const seccionController = require('../controllers/seccionController');
 
+
 /**
  * @swagger
  * tags:
- *   - name: Secciones
- *     description: Gestión de secciones para organizar trabajadores.
+ * - name: Secciones
+ *   description: Gestión de secciones sindicales
  */
 
 /**
@@ -23,62 +24,113 @@ const seccionController = require('../controllers/seccionController');
  *       scheme: bearer
  *       bearerFormat: JWT
  *   schemas:
+ *     EstadosMexico:
+ *       type: string
+ *       enum:
+ *         - AGUASCALIENTES
+ *         - BAJA_CALIFORNIA
+ *         - BAJA_CALIFORNIA_SUR
+ *         - CAMPECHE
+ *         - CHIAPAS
+ *         - CHIHUAHUA
+ *         - CIUDAD_DE_MEXICO
+ *         - COAHUILA
+ *         - COLIMA
+ *         - DURANGO
+ *         - ESTADO_DE_MEXICO
+ *         - GUANAJUATO
+ *         - GUERRERO
+ *         - HIDALGO
+ *         - JALISCO
+ *         - MICHOACAN
+ *         - MORELOS
+ *         - NAYARIT
+ *         - NUEVO_LEON
+ *         - OAXACA
+ *         - PUEBLA
+ *         - QUERETARO
+ *         - QUINTANA_ROO
+ *         - SAN_LUIS_POTOSI
+ *         - SINALOA
+ *         - SONORA
+ *         - TABASCO
+ *         - TAMAULIPAS
+ *         - TLAXCALA
+ *         - VERACRUZ
+ *         - YUCATAN
+ *         - ZACATECAS
+ * 
  *     Seccion:
  *       type: object
  *       properties:
  *         id_seccion:
  *           type: integer
  *           readOnly: true
- *           description: ID único de la sección.
  *           example: 1
- *         nombre_seccion:
+ *         numero_seccion:
+ *           type: integer
+ *           example: 1
+ *         estado:
+ *           $ref: '#/components/schemas/EstadosMexico'
+ *           example: CIUDAD_DE_MEXICO
+ *         ubicacion:
  *           type: string
- *           description: Nombre único de la sección (ej. "CDMX Sindicato Principal #1").
- *           example: "CDMX Sindicato Principal #1"
- *         descripcion:
+ *           example: "Oficina Central, Calle Siempre Viva #123"
+ *         secretario:
  *           type: string
  *           nullable: true
- *           description: Descripción de la sección.
- *           example: "Sección principal del sindicato en la Ciudad de México."
- *       required:
- *         - nombre_seccion
+ *           example: "Juan Pérez"
+ *         numero_trabajadores:
+ *           type: integer
+ *           readOnly: true
+ *           example: 50
  * 
  *     SeccionInput:
  *       type: object
  *       required:
- *         - nombre_seccion
+ *         - numero_seccion
+ *         - estado
+ *         - ubicacion
  *       properties:
- *         nombre_seccion:
+ *         numero_seccion:
+ *           type: integer
+ *           example: 45
+ *         estado:
+ *           $ref: '#/components/schemas/EstadosMexico'
+ *           example: JALISCO
+ *         ubicacion:
  *           type: string
- *           maxLength: 100
- *           description: Nombre único de la sección a crear.
- *           example: "Nueva Sección de Prueba"
- *         descripcion:
+ *           example: "Guadalajara, Calle Falsa #123"
+ *         secretario:
  *           type: string
  *           nullable: true
- *           description: Descripción opcional de la nueva sección.
- *           example: "Descripción de la nueva sección."
+ *           example: "Luis Mendoza"
  * 
  *     SeccionUpdate:
  *       type: object
  *       properties:
- *         nombre_seccion:
+ *         numero_seccion:
+ *           type: integer
+ *           example: 46
+ *         estado:
+ *           $ref: '#/components/schemas/EstadosMexico'
+ *           example: NAYARIT
+ *         ubicacion:
  *           type: string
- *           maxLength: 100
- *           description: Nuevo nombre opcional para la sección.
- *           example: "Sección Actualizada"
- *         descripcion:
+ *           example: "Tepic, Avenida Siempre Viva #456"
+ *         secretario:
  *           type: string
  *           nullable: true
- *           description: Nueva descripción opcional para la sección.
- *           example: "Descripción actualizada de la sección."
+ *           example: "Carlos Álvarez"
  */
+// --- Rutas para Secciones ---
 
 /**
  * @swagger
  * /secciones:
  *   post:
- *     summary: Crea una nueva sección.
+ *     summary: Crea una nueva sección
+ *     description: Accesible solo para ADMINISTRADORES
  *     tags: [Secciones]
  *     security:
  *       - bearerAuth: []
@@ -90,36 +142,27 @@ const seccionController = require('../controllers/seccionController');
  *             $ref: '#/components/schemas/SeccionInput'
  *     responses:
  *       201:
- *         description: Sección creada exitosamente.
+ *         description: Sección creada
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Seccion'
  *       400:
- *         description: Datos de entrada inválidos.
+ *         description: Datos inválidos
  *       401:
- *         description: No autorizado (token JWT no proporcionado o inválido).
+ *         description: No autorizado
  *       403:
- *         description: Prohibido - Rol no permitido (solo ADMINISTRADOR).
+ *         description: Prohibido
  *       409:
- *         description: Conflicto - Ya existe una sección con el mismo nombre.
+ *         description: Conflicto
  *       500:
- *         description: Error del servidor.
+ *         description: Error del servidor
  */
 router.post(
   '/',
   verifyToken,
   hasRole([Roles.ADMINISTRADOR]),
-  [
-    check('nombre_seccion')
-      .notEmpty().withMessage('El nombre de la sección es requerido.')
-      .isLength({ min: 3, max: 100 }).withMessage('El nombre debe tener entre 3 y 100 caracteres.')
-      .trim().escape(),
-    check('descripcion')
-      .optional({ nullable: true })
-      .isLength({ max: 255 }).withMessage('La descripción no debe exceder los 255 caracteres.')
-      .trim().escape()
-  ],
+  seccionController.validarCreacionSeccion,
   seccionController.createSeccion
 );
 
@@ -127,13 +170,14 @@ router.post(
  * @swagger
  * /secciones:
  *   get:
- *     summary: Obtiene una lista de todas las secciones.
+ *     summary: Obtiene todas las secciones
+ *     description: Accesible para ADMINISTRADORES y USUARIOS
  *     tags: [Secciones]
  *     security:
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: Lista de secciones obtenida exitosamente.
+ *         description: Lista de secciones
  *         content:
  *           application/json:
  *             schema:
@@ -141,11 +185,11 @@ router.post(
  *               items:
  *                 $ref: '#/components/schemas/Seccion'
  *       401:
- *         description: No autorizado (token JWT no proporcionado o inválido).
+ *         description: No autorizado
  *       403:
- *         description: Prohibido - Rol no permitido (solo ADMINISTRADOR y USUARIO).
+ *         description: Prohibido
  *       500:
- *         description: Error del servidor.
+ *         description: Error del servidor
  */
 router.get(
   '/',
@@ -158,7 +202,8 @@ router.get(
  * @swagger
  * /secciones/{id}:
  *   get:
- *     summary: Obtener sección por ID.
+ *     summary: Obtiene sección por ID
+ *     description: Accesible para ADMINISTRADORES y USUARIOS
  *     tags: [Secciones]
  *     security:
  *       - bearerAuth: []
@@ -168,84 +213,44 @@ router.get(
  *         schema:
  *           type: integer
  *         required: true
- *         description: ID único de la sección.
+ *         description: ID de la sección
  *     responses:
  *       200:
- *         description: Sección obtenida exitosamente.
+ *         description: Sección obtenida
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Seccion'
  *       400:
- *         description: ID de sección inválido.
+ *         description: ID inválido
  *       401:
- *         description: No autorizado (token JWT no proporcionado o inválido).
+ *         description: No autorizado
  *       403:
- *         description: Prohibido - Rol no permitido (solo ADMINISTRADOR y USUARIO).
+ *         description: Prohibido
  *       404:
- *         description: Sección no encontrada.
+ *         description: No encontrada
  *       500:
- *         description: Error del servidor.
+ *         description: Error del servidor
  */
 router.get(
   '/:id',
   verifyToken,
   hasRole([Roles.ADMINISTRADOR, Roles.USUARIO]),
-  [param('id').isInt().withMessage('El ID de la sección debe ser un número entero válido.')],
+  [
+    param('id')
+      .isInt().withMessage('ID debe ser entero')
+      .toInt()
+  ],
   seccionController.getSeccionById
 );
 
-/**
- * @swagger
- * /secciones/nombre/{nombre}:
- *   get:
- *     summary: Obtener sección por nombre. (Considera usar GET /secciones/{id} para mayor robustez)
- *     tags: [Secciones]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: nombre
- *         schema:
- *           type: string
- *         required: true
- *         description: Nombre único de la sección.
- *     responses:
- *       200:
- *         description: Sección obtenida exitosamente.
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Seccion'
- *       400:
- *         description: Nombre de sección inválido.
- *       401:
- *         description: No autorizado (token JWT no proporcionado o inválido).
- *       403:
- *         description: Prohibido - Rol no permitido (solo ADMINISTRADOR y USUARIO).
- *       404:
- *         description: Sección no encontrada.
- *       500:
- *         description: Error del servidor.
- */
-router.get(
-  '/nombre/:nombre',
-  verifyToken,
-  hasRole([Roles.ADMINISTRADOR, Roles.USUARIO]),
-  [
-    param('nombre')
-      .notEmpty().withMessage('El nombre de la sección es requerido.')
-      .isLength({ min: 3, max: 100 }).withMessage('El nombre debe tener entre 3 y 100 caracteres.')
-      .trim().escape()
-  ],
-  seccionController.getSeccionPorNombre
-);
 
 /**
  * @swagger
  * /secciones/{id}:
  *   patch:
- *     summary: Actualiza parcialmente una sección por su ID.
+ *     summary: Actualiza sección por ID
+ *     description: Accesible solo para ADMINISTRADORES
  *     tags: [Secciones]
  *     security:
  *       - bearerAuth: []
@@ -255,7 +260,7 @@ router.get(
  *         schema:
  *           type: integer
  *         required: true
- *         description: ID único de la sección a actualizar.
+ *         description: ID de la sección
  *     requestBody:
  *       required: true
  *       content:
@@ -264,40 +269,34 @@ router.get(
  *             $ref: '#/components/schemas/SeccionUpdate'
  *     responses:
  *       200:
- *         description: Sección actualizada exitosamente.
+ *         description: Sección actualizada
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Seccion'
  *       400:
- *         description: Datos de entrada inválidos o no hay datos para actualizar.
+ *         description: Datos inválidos
  *       401:
- *         description: No autorizado (token JWT no proporcionado o inválido).
+ *         description: No autorizado
  *       403:
- *         description: Prohibido - Rol no permitido (solo ADMINISTRADOR).
+ *         description: Prohibido
  *       404:
- *         description: Sección no encontrada.
+ *         description: No encontrada
  *       409:
- *         description: Conflicto - El nuevo nombre de sección ya está en uso.
+ *         description: Conflicto
  *       500:
- *         description: Error del servidor.
+ *         description: Error del servidor
  */
 router.patch(
   '/:id',
   verifyToken,
   hasRole([Roles.ADMINISTRADOR]),
   [
-    param('id').isInt().withMessage('El ID de la sección debe ser un número entero válido.'),
-    check('nombre_seccion')
-      .optional()
-      .trim()
-      .isLength({ min: 3, max: 100 }).withMessage('El nombre debe tener entre 3 y 100 caracteres.')
-      .escape(),
-    check('descripcion')
-      .optional({ nullable: true })
-      .isLength({ max: 255 }).withMessage('La descripción no debe exceder los 255 caracteres.')
-      .trim().escape()
+    param('id')
+      .isInt().withMessage('ID debe ser entero')
+      .toInt()
   ],
+  seccionController.validarSeccion,
   seccionController.updateSeccion
 );
 
@@ -305,7 +304,8 @@ router.patch(
  * @swagger
  * /secciones/{id}:
  *   delete:
- *     summary: Elimina una sección por su ID.
+ *     summary: Elimina sección por ID
+ *     description: Accesible solo para ADMINISTRADORES
  *     tags: [Secciones]
  *     security:
  *       - bearerAuth: []
@@ -315,10 +315,10 @@ router.patch(
  *         schema:
  *           type: integer
  *         required: true
- *         description: ID único de la sección a eliminar.
+ *         description: ID de la sección
  *     responses:
  *       200:
- *         description: Sección eliminada exitosamente.
+ *         description: Sección eliminada
  *         content:
  *           application/json:
  *             schema:
@@ -329,23 +329,26 @@ router.patch(
  *                   example: true
  *                 message:
  *                   type: string
- *                   example: "Sección eliminada exitosamente"
  *       400:
- *         description: ID de sección inválido o la sección tiene trabajadores asociados.
+ *         description: ID inválido o restricciones
  *       401:
- *         description: No autorizado (token JWT no proporcionado o inválido).
+ *         description: No autorizado
  *       403:
- *         description: Prohibido - Rol no permitido (solo ADMINISTRADOR).
+ *         description: Prohibido
  *       404:
- *         description: Sección no encontrada.
+ *         description: No encontrada
  *       500:
- *         description: Error del servidor.
+ *         description: Error del servidor
  */
 router.delete(
   '/:id',
   verifyToken,
   hasRole([Roles.ADMINISTRADOR]),
-  [param('id').isInt().withMessage('El ID de la sección debe ser un número entero válido.')],
+  [
+    param('id')
+      .isInt().withMessage('ID debe ser entero')
+      .toInt()
+  ],
   seccionController.deleteSeccion
 );
 

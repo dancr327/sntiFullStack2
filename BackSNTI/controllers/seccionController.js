@@ -1,227 +1,246 @@
 // controllers/seccionController.js
 const { PrismaClient } = require('@prisma/client');
-const { validationResult } = require('express-validator');
+const { body, param, validationResult } = require('express-validator');
+const EstadosMexico = require('../enums/estados.enum'); // Asegúrate de que esta ruta sea correcta
 const prisma = new PrismaClient();
 
-// Helper para enviar respuestas consistentes
 const sendResponse = (res, success, statusCode, message, data = null, errors = null) => {
-    res.status(statusCode).json({
-        success,
-        message,
-        data,
-        errors
-    });
+    res.status(statusCode).json({ success, message, data, errors });
 };
 
-/**
- * Obtener todas las secciones.
- * Permite a ADMINISTRADOR y USUARIO.
- */
+// --- Validaciones ---
+const validarSeccion = [
+    body('numero_seccion')
+        .optional()
+        .isInt({ min: 1 }).withMessage('El número de sección debe ser un entero positivo.'),
+    body('estado')
+        .optional()
+        .isIn(Object.values(EstadosMexico)).withMessage('El estado no es un valor válido.'),
+    body('ubicacion')
+        .optional()
+        .isString().withMessage('La ubicación debe ser texto.')
+        .isLength({ max: 255 }).withMessage('La ubicación no puede exceder los 255 caracteres.'),
+    body('secretario')
+        .optional({ nullable: true })
+        .isString().withMessage('El secretario debe ser texto.')
+        .isLength({ max: 255 }).withMessage('El nombre del secretario no puede exceder los 255 caracteres.')
+];
+
+const validarCreacionSeccion = [
+    body('numero_seccion')
+        .notEmpty().withMessage('El número de sección es obligatorio.')
+        .isInt({ min: 1 }).withMessage('El número debe ser positivo.'),
+    body('estado')
+        .notEmpty().withMessage('El estado es obligatorio.')
+        .isIn(Object.values(EstadosMexico)).withMessage('Estado no válido.'),
+    body('ubicacion')
+        .notEmpty().withMessage('La ubicación es obligatoria.')
+        .isString().withMessage('Debe ser texto.')
+        .isLength({ max: 255 }).withMessage('Máximo 255 caracteres.'),
+    ...validarSeccion
+];
+
+// --- Controladores ---
+
 const getAllSecciones = async (req, res) => {
     try {
         const secciones = await prisma.secciones.findMany({
-            orderBy: { nombre_seccion: 'asc' } // Ordenar alfabéticamente
+            orderBy: { numero_seccion: 'asc' },
+            include: {
+                _count: {
+                    select: { trabajadores: true }
+                }
+            }
         });
-        sendResponse(res, true, 200, 'Secciones obtenidas exitosamente', secciones);
+
+        const formatted = secciones.map(seccion => ({
+            ...seccion,
+            numero_trabajadores: seccion._count.trabajadores,
+            _count: undefined
+        }));
+
+        sendResponse(res, true, 200, 'Secciones obtenidas exitosamente.', formatted);
     } catch (error) {
-        console.error('Error al obtener todas las secciones:', error);
-        sendResponse(res, false, 500, 'Error interno del servidor al obtener secciones', null, error.message);
+        console.error(error);
+        sendResponse(res, false, 500, 'Error al obtener secciones.', null, error.message);
     }
 };
 
-/**
- * Obtener sección por ID.
- * Permite a ADMINISTRADOR y USUARIO.
- */
 const getSeccionById = async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        return sendResponse(res, false, 400, 'Datos de entrada inválidos', null, errors.array());
+        return sendResponse(res, false, 400, 'Datos inválidos.', null, errors.array());
     }
-
-    const { id } = req.params;
-    try {
-        const seccion = await prisma.secciones.findUnique({
-            where: { id_seccion: parseInt(id) } // Asegúrate de parsear a entero
-        });
-
-        if (!seccion) {
-            return sendResponse(res, false, 404, 'Sección no encontrada');
-        }
-
-        sendResponse(res, true, 200, 'Sección obtenida exitosamente', seccion);
-    } catch (error) {
-        console.error('Error al obtener sección por ID:', error);
-        sendResponse(res, false, 500, 'Error interno del servidor al obtener sección', null, error.message);
-    }
-};
-
-/**
- * Obtener Sección por Nombre (manteniendo tu funcionalidad, pero por ID es más robusto si el nombre cambia)
- * Permite a ADMINISTRADOR y USUARIO.
- */
-const getSeccionPorNombre = async (req, res) => {
-    const errors = validationResult(req); // Usar validationResult de express-validator
-    if (!errors.isEmpty()) {
-        return sendResponse(res, false, 400, 'Datos de entrada inválidos', null, errors.array());
-    }
-
-    const { nombre } = req.params;
-    const trimmedNombre = nombre.trim();
 
     try {
         const seccion = await prisma.secciones.findUnique({
-            where: { nombre_seccion: trimmedNombre }
-        });
-
-        if (!seccion) {
-            return sendResponse(res, false, 404, 'Sección no encontrada');
-        }
-
-        sendResponse(res, true, 200, 'Sección obtenida exitosamente', seccion);
-    } catch (error) {
-        console.error('Error al obtener sección por nombre:', error);
-        sendResponse(res, false, 500, 'Error interno del servidor al obtener sección', null, error.message);
-    }
-};
-
-/**
- * Actualizar Sección (PATCH).
- * Exclusivo para ADMINISTRADOR.
- * Permite actualizar por ID o Nombre. Optaremos por ID ya que es más estable.
- */
-const updateSeccion = async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        return sendResponse(res, false, 400, 'Datos de entrada inválidos', null, errors.array());
-    }
-
-    // Usaremos el ID para la actualización, es más robusto que el nombre para el identificador de la URL
-    const { id } = req.params;
-    const { nombre_seccion, descripcion } = req.body;
-
-    // Objeto para almacenar los campos a actualizar
-    const dataToUpdate = {};
-    if (nombre_seccion !== undefined) {
-        dataToUpdate.nombre_seccion = nombre_seccion.trim();
-    }
-    if (descripcion !== undefined) {
-        dataToUpdate.descripcion = descripcion.trim();
-    }
-
-    if (Object.keys(dataToUpdate).length === 0) {
-        return sendResponse(res, false, 400, 'No hay datos para actualizar');
-    }
-
-    try {
-        const seccionExistente = await prisma.secciones.findUnique({
-            where: { id_seccion: parseInt(id) }
-        });
-
-        if (!seccionExistente) {
-            return sendResponse(res, false, 404, 'Sección no encontrada');
-        }
-
-        // Si se intenta cambiar el nombre, verificar unicidad
-        if (dataToUpdate.nombre_seccion && dataToUpdate.nombre_seccion !== seccionExistente.nombre_seccion) {
-            const nombreExistente = await prisma.secciones.findUnique({
-                where: { nombre_seccion: dataToUpdate.nombre_seccion },
-                select: { id_seccion: true }
-            });
-            if (nombreExistente) {
-                return sendResponse(res, false, 409, 'El nuevo nombre de sección ya está en uso');
+            where: { id_seccion: parseInt(req.params.id) },
+            include: {
+                _count: { select: { trabajadores: true } }
             }
-        }
-
-        const seccionActualizada = await prisma.secciones.update({
-            where: { id_seccion: parseInt(id) },
-            data: dataToUpdate
         });
 
-        sendResponse(res, true, 200, 'Sección actualizada exitosamente', seccionActualizada);
+        if (!seccion) {
+            return sendResponse(res, false, 404, 'Sección no encontrada.');
+        }
+
+        sendResponse(res, true, 200, 'Sección obtenida exitosamente.', {
+            ...seccion,
+            numero_trabajadores: seccion._count.trabajadores,
+            _count: undefined
+        });
     } catch (error) {
-        console.error('Error al actualizar sección:', error);
-        sendResponse(res, false, 500, 'Error interno del servidor al actualizar sección', null, error.message);
+        console.error(error);
+        sendResponse(res, false, 500, 'Error al obtener sección.', null, error.message);
     }
 };
 
-// **NUEVO** para crear secciones (necesario para PATCH y GET)
 const createSeccion = async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        return sendResponse(res, false, 400, 'Datos de entrada inválidos', null, errors.array());
+        return sendResponse(res, false, 400, 'Datos inválidos.', null, errors.array());
     }
 
-    const { nombre_seccion, descripcion } = req.body;
+    const { numero_seccion, estado, ubicacion, secretario } = req.body;
 
     try {
-        const seccionExistente = await prisma.secciones.findUnique({
-            where: { nombre_seccion: nombre_seccion.trim() }
+        const existe = await prisma.secciones.findUnique({
+            where: { numero_seccion }
         });
 
-        if (seccionExistente) {
-            return sendResponse(res, false, 409, 'El nombre de sección ya existe');
+        if (existe) {
+            return sendResponse(res, false, 409, 'El número de sección ya existe.', null, [
+                { msg: 'Número de sección duplicado.', param: 'numero_seccion' }
+            ]);
         }
 
-        const nuevaSeccion = await prisma.secciones.create({
+        const nueva = await prisma.secciones.create({
             data: {
-                nombre_seccion: nombre_seccion.trim(),
-                descripcion: descripcion ? descripcion.trim() : null
+                numero_seccion,
+                estado,
+                ubicacion,
+                secretario: secretario || null
             }
         });
 
-        sendResponse(res, true, 201, 'Sección creada exitosamente', nuevaSeccion);
+        const conDetalles = await prisma.secciones.findUnique({
+            where: { id_seccion: nueva.id_seccion },
+            include: {
+                _count: { select: { trabajadores: true } }
+            }
+        });
+
+        sendResponse(res, true, 201, 'Sección creada exitosamente.', {
+            ...conDetalles,
+            numero_trabajadores: conDetalles._count.trabajadores,
+            _count: undefined
+        });
     } catch (error) {
-        console.error('Error al crear sección:', error);
-        sendResponse(res, false, 500, 'Error interno del servidor al crear sección', null, error.message);
+        console.error(error);
+        sendResponse(res, false, 500, 'Error al crear sección.', null, error.message);
     }
 };
 
-// **NUEVO** para eliminar secciones
-const deleteSeccion = async (req, res) => {
+const updateSeccion = async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        return sendResponse(res, false, 400, 'Datos de entrada inválidos', null, errors.array());
+        return sendResponse(res, false, 400, 'Datos inválidos.', null, errors.array());
     }
 
     const { id } = req.params;
+    const { numero_seccion, estado, ubicacion, secretario } = req.body;
+
+    const dataToUpdate = {};
+    if (numero_seccion !== undefined) dataToUpdate.numero_seccion = numero_seccion;
+    if (estado !== undefined) dataToUpdate.estado = estado;
+    if (ubicacion !== undefined) dataToUpdate.ubicacion = ubicacion;
+    if (secretario !== undefined) dataToUpdate.secretario = secretario;
+
+    if (Object.keys(dataToUpdate).length === 0) {
+        return sendResponse(res, false, 400, 'No hay datos para actualizar.');
+    }
 
     try {
-        const seccionExistente = await prisma.secciones.findUnique({
+        const existente = await prisma.secciones.findUnique({
             where: { id_seccion: parseInt(id) }
         });
 
-        if (!seccionExistente) {
-            return sendResponse(res, false, 404, 'Sección no encontrada');
+        if (!existente) {
+            return sendResponse(res, false, 404, 'Sección no encontrada.');
         }
 
-        // Antes de eliminar la sección, verifica si hay trabajadores asociados.
-        // Si tienes una relación en Prisma, puedes usar `trabajadores` aquí.
-        const trabajadoresAsociados = await prisma.trabajadores.count({
-            where: { id_seccion: parseInt(id) }
-        });
-
-        if (trabajadoresAsociados > 0) {
-            return sendResponse(res, false, 400, 'No se puede eliminar la sección porque tiene trabajadores asociados. Elimine los trabajadores primero o reasígnelos.');
+        if (
+            dataToUpdate.numero_seccion &&
+            dataToUpdate.numero_seccion !== existente.numero_seccion
+        ) {
+            const duplicado = await prisma.secciones.findUnique({
+                where: { numero_seccion: dataToUpdate.numero_seccion }
+            });
+            if (duplicado) {
+                return sendResponse(res, false, 409, 'Número de sección ya en uso.', null, [
+                    { msg: 'Número duplicado.', param: 'numero_seccion' }
+                ]);
+            }
         }
 
-        await prisma.secciones.delete({
-            where: { id_seccion: parseInt(id) }
+        const actualizada = await prisma.secciones.update({
+            where: { id_seccion: parseInt(id) },
+            data: dataToUpdate,
+            include: {
+                _count: { select: { trabajadores: true } }
+            }
         });
 
-        sendResponse(res, true, 200, 'Sección eliminada exitosamente');
+        sendResponse(res, true, 200, 'Sección actualizada exitosamente.', {
+            ...actualizada,
+            numero_trabajadores: actualizada._count.trabajadores,
+            _count: undefined
+        });
     } catch (error) {
-        console.error('Error al eliminar sección:', error);
-        sendResponse(res, false, 500, 'Error interno del servidor al eliminar sección', null, error.message);
+        console.error(error);
+        sendResponse(res, false, 500, 'Error al actualizar sección.', null, error.message);
     }
 };
 
+const deleteSeccion = async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return sendResponse(res, false, 400, 'Datos inválidos.', null, errors.array());
+    }
+
+    const seccionId = parseInt(req.params.id);
+
+    try {
+        const seccion = await prisma.secciones.findUnique({
+            where: { id_seccion: seccionId },
+            include: { _count: { select: { trabajadores: true } } }
+        });
+
+        if (!seccion) {
+            return sendResponse(res, false, 404, 'Sección no encontrada.');
+        }
+
+        if (seccion._count.trabajadores > 0) {
+            return sendResponse(res, false, 400, 'La sección tiene trabajadores asignados.');
+        }
+
+        await prisma.secciones.delete({
+            where: { id_seccion: seccionId }
+        });
+
+        sendResponse(res, true, 200, 'Sección eliminada exitosamente.');
+    } catch (error) {
+        console.error(error);
+        sendResponse(res, false, 500, 'Error al eliminar sección.', null, error.message);
+    }
+};
 
 module.exports = {
+    validarSeccion,
+    validarCreacionSeccion,
     getAllSecciones,
     getSeccionById,
-    getSeccionPorNombre, // Mantener si es necesario, pero recomiendo priorizar por ID
-    updateSeccion,
     createSeccion,
+    updateSeccion,
     deleteSeccion
 };

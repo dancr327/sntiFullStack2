@@ -1,5 +1,6 @@
 export interface Seccion {
-  id_seccion: number;
-  nombre_seccion: string;
-  descripcion?: string;
+    numero_seccion: number;
+    estado: string; // si usas enum también cámbialo a ese tipo
+    ubicacion: string;
+    secretario?: string;
 }

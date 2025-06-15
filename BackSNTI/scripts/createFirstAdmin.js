@@ -26,7 +26,7 @@ const createFirstAdmin = async () => {
     // Datos del administrador inicial (PERSONALIZA ESTOS DATOS)
     const adminData = {
       identificador: 'admin@tuempresa.com',
-      contraseña: 'AdminSeguro123!', // ⚠️ CAMBIAR por una contraseña segura
+      contraseña: 'AdminSeguro12345', // ⚠️ CAMBIAR por una contraseña segura
       nombre: 'Administrador',
       apellido_paterno: 'Principal',
       apellido_materno: 'Sistema',
@@ -62,7 +62,7 @@ const createFirstAdmin = async () => {
       data: {
         // Campos de autenticación
         identificador: adminData.identificador,
-        contraseña_hash: contraseñaHash,
+        password_hash: contraseñaHash, // ← cambio aquí
         intentos_fallidos: 0,
         bloqueado: false,
         rol: 'ADMINISTRADOR',

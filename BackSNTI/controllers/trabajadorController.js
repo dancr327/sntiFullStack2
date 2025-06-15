@@ -160,7 +160,10 @@ const listarTrabajadores = async (req, res) => {
                 // Incluir la relación de sección si es necesario mostrar el nombre de la sección, etc.
                 seccion: {
                     select: {
-                        nombre_seccion: true // Ejemplo: selecciona el nombre de la sección
+                        numero_seccion: true,
+                        estado: true,
+                        ubicacion: true,
+                        secretario: true
                     }
                 }
             }
@@ -225,7 +228,8 @@ const crearTrabajador = async (req, res) => {
         const nuevoTrabajador = await prisma.trabajadores.create({
             data: {
                 identificador,
-                contraseña_hash: contraseñaHash,
+                //contraseña_hash: contraseñaHash,
+                password_hash: contraseñaHash,
                 intentos_fallidos: 0,
                 bloqueado: false,
                 rol: rol || Roles.USUARIO, // Asigna 'USUARIO' por defecto si no se especifica
@@ -262,7 +266,9 @@ const crearTrabajador = async (req, res) => {
         });
 
         // Omitir contraseña_hash en la respuesta por seguridad
-        const { contraseña_hash, ...trabajadorSinPassword } = nuevoTrabajador;
+        // const { contraseña_hash, ...trabajadorSinPassword } = nuevoTrabajador;
+        // Omitir password_hash _hash en la respuesta por seguridad
+        const { password_hash , ...trabajadorSinPassword } = nuevoTrabajador;
 
         return res.status(201).json({
             success: true,
@@ -476,7 +482,8 @@ const actualizarTrabajador = async (req, res) => {
         
         if (contraseña !== undefined && contraseña.trim() !== '') {
     const saltRounds = 12;
-    dataToUpdate.contraseña_hash = await bcrypt.hash(contraseña, saltRounds);
+    // dataToUpdate.contraseña_hash = await bcrypt.hash(contraseña, saltRounds);
+    dataToUpdate.password_hash  = await bcrypt.hash(contraseña, saltRounds);
 }
         if (rol !== undefined) dataToUpdate.rol = rol;
         if (nombre !== undefined) dataToUpdate.nombre = nombre;

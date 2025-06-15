@@ -12,7 +12,12 @@ export interface Trabajador {
   curp: string;
   rfc: string;
   email: string;
-  situacion_sentimental?: 'Soltero' | 'Casado' | 'Divorciado' | 'Viudo' | 'Union Libre';
+  situacion_sentimental?:
+    | 'Soltero'
+    | 'Casado'
+    | 'Divorciado'
+    | 'Viudo'
+    | 'Union Libre';
   numero_hijos?: number;
   numero_empleado: string;
   numero_plaza: string;
@@ -32,10 +37,12 @@ export interface Trabajador {
   fecha_creacion?: string;
   ultimo_login?: string;
   fecha_actualizacion?: string;
-  
+
   // ¡Esto es importante! Relación con secciones:
-  seccion?: {
-    nombre_seccion: string;
-    descripcion?: string;
+  seccion: {
+    numero_seccion: number;
+    estado: string; // si usas enum también cámbialo a ese tipo
+    ubicacion: string;
+    secretario?: string;
   };
 }

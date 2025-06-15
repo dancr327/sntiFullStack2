@@ -60,16 +60,19 @@ const login = async (req, res) => {
 
     // Buscar trabajador por identificador (puede ser email o lo que uses como identificador único)
     const trabajador = await prisma.trabajadores.findUnique({
-      where: { identificador: identificador.toLowerCase() },
-      include: {
-        seccion: {
-          select: {
-            nombre_seccion: true,
-            descripcion: true
-          }
-        }
+  where: { identificador: identificador.toLowerCase() },
+  include: {
+    seccion: {
+      select: {
+        id_seccion: true,
+        numero_seccion: true,
+        estado: true,
+        ubicacion: true,
+        secretario: true
       }
-    });
+    }
+  }
+});
 
     // Verificar si existe el trabajador
     if (!trabajador) {
@@ -90,10 +93,9 @@ const login = async (req, res) => {
 
     // Depuración de contraseñas (solo para desarrollo, ¡eliminar en producción!)
     // console.log("Contraseña recibida (sin hashear):", contraseña);
-    // console.log("Contraseña hasheada en DB:", trabajador.contraseña_hash);
-
+    // console.log("Contraseña hasheada en DB:", trabajador.password_hash);
     // Verificar contraseña
-    const contraseñaValida = await bcrypt.compare(contraseña, trabajador.contraseña_hash);
+    const contraseñaValida = await bcrypt.compare(contraseña, trabajador.password_hash );
 
     // console.log("Resultado de bcrypt.compare:", contraseñaValida); // Línea de depuración opcional
 

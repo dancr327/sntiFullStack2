@@ -62,23 +62,26 @@
           </thead>
           <tbody>
             <tr *ngFor="let t of trabajadoresFiltrados; let i = index">
-              <td>
+<td>
                 <button
                   class="btn btn-sm btn-primary me-1"
                   (click)="verTrabajador(t.id_trabajador)"
                 >
-                  <i class="bi bi-eye"></i>
+                  
+                  <span class="material-icons">visibility</span>
                 </button>
                 <button
                   class="btn btn-sm btn-warning me-1"
                    (click)="editarTrabajador(t.id_trabajador)">
-                  <i class="bi bi-pencil"></i>
+                  
+                  <span class="material-icons">edit</span>
                 </button>
                 <button
                   class="btn btn-sm btn-danger"
                   (click)="eliminarTrabajador(t.id_trabajador)"
                 >
-                  <i class="bi bi-trash"></i>
+                  
+                  <span class="material-icons">delete</span>
                 </button>
               </td>
               <td>{{ t.id_trabajador }}</td>

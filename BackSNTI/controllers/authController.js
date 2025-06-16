@@ -191,8 +191,10 @@ const verificarToken = async (req, res) => {
         bloqueado: true,
         seccion: {
           select: {
-            nombre_seccion: true,
-            descripcion: true
+            numero_seccion: true,
+            estado: true,
+            ubicacion: true,
+            // secretario: true
           }
         }
       }

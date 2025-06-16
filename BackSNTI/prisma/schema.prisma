@@ -257,7 +257,7 @@ enum SituacionSentimental {
   Casado
   Divorciado
   Viudo
-  UnionLibre
+  Union_Libre
 }
 
 enum Sexo {

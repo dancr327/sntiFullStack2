@@ -10,6 +10,7 @@ import { NgClass, CommonModule } from '@angular/common';
 import { SeccionesService } from '../../../core/services/secciones.service';
 import { Seccion } from '../../../core/models/seccion.model';
 
+
 @Component({
   selector: 'app-trabajadores',
   standalone: true,

@@ -121,7 +121,7 @@
         <option value="Casado">Casado(a)</option>
         <option value="Divorciado">Divorciado(a)</option>
         <option value="Viudo">Viudo(a)</option>
-        <option value="Union Libre">Unión libre</option>
+        <option value="Union_Libre">Unión libre</option>
       </select>
       <small *ngIf="formEmpleado.get('situacion_sentimental')?.invalid && (formEmpleado.get('situacion_sentimental')?.dirty || formEmpleado.get('situacion_sentimental')?.touched)">Campo obligatorio.</small>
       <small *ngIf="mensajeErroresCampos['situacion_sentimental']" class="text-danger">{{ mensajeErroresCampos['situacion_sentimental'] }}</small>

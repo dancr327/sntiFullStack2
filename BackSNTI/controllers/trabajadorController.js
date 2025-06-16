@@ -332,7 +332,10 @@ const miPerfil = async (req, res) => {
                 fecha_actualizacion: true,
                 seccion: {
                     select: {
-                        nombre_seccion: true
+                        numero_seccion: true,
+                        estado: true,
+                        ubicacion: true,
+                        // secretario: true
                     }
                 }
             }
@@ -405,7 +408,10 @@ const obtenerTrabajadorPorId = async (req, res) => {
                 fecha_actualizacion: true,
                 seccion: {
                     select: {
-                        nombre_seccion: true
+                        numero_seccion: true,
+                        estado: true,
+                        ubicacion: true,
+                        // secretario: true
                     }
                 }
             }
@@ -555,7 +561,9 @@ const actualizarTrabajador = async (req, res) => {
                 fecha_actualizacion: true,
                 seccion: {
                     select: {
-                        nombre_seccion: true
+                        numero_seccion: true,
+                        estado: true,
+                        ubicacion: true,
                     }
                 }
             }

@@ -24,9 +24,9 @@
             (change)="filtrarTrabajadores()"
           >
             <option [ngValue]="''">Todas las secciones</option>
-            <option *ngFor="let s of secciones" [ngValue]="s.id_seccion">
+            <!-- <option *ngFor="let s of secciones" [ngValue]="s.id_seccion">
               {{ s.nombre_seccion }}
-            </option>
+            </option> -->
           </select>
         </div>
         <div>
@@ -94,7 +94,8 @@
               <td>{{ t.curp }}</td>
               <td>{{ t.numero_empleado }}</td>
               <td>{{ t.numero_plaza }}</td>
-              <td>{{ t.seccion?.nombre_seccion }}</td>
+              <td>{{ t.seccion.numero_seccion }} - {{ t.seccion.estado.replaceAll('_', ' ') }}</td>
+
             </tr>
             <tr *ngIf="trabajadoresFiltrados.length === 0">
               <td colspan="6" class="text-center">
@@ -153,7 +154,9 @@
                 <b>Adscripción:</b> {{ detalleTrabajador.adscripcion }}
               </li>
               <li class="list-group-item">
-                <b>Sección:</b> {{ detalleTrabajador.seccion?.nombre_seccion }}
+                <b>Sección:</b>
+                Sección {{ detalleTrabajador.seccion.numero_seccion }} - 
+                {{ detalleTrabajador.seccion.estado.replaceAll('_', ' ') }} ({{ detalleTrabajador.seccion.ubicacion }})
               </li>
               <li class="list-group-item">
                 <b>Nivel Estudios:</b> {{ detalleTrabajador.nivel_estudios }}

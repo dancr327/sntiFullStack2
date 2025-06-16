@@ -1,4 +1,5 @@
 // core/models/trabajador.model.ts
+import {EstadosMexico} from '../../../../../BackSNTI/enums/estados.enum'; 
 export interface Trabajador {
   id_trabajador: number;
   identificador: string;
@@ -17,7 +18,7 @@ export interface Trabajador {
     | 'Casado'
     | 'Divorciado'
     | 'Viudo'
-    | 'Union Libre';
+    | 'Union_Libre';
   numero_hijos?: number;
   numero_empleado: string;
   numero_plaza: string;

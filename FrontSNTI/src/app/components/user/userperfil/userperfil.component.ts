@@ -56,13 +56,4 @@ export class UserperfilComponent {
   });
 }
 
-
-  toggleEdit() {
-    this.editMode = !this.editMode;
-    if (this.editMode) {
-      this.perfilForm.enable();
-    } else {
-      this.perfilForm.disable();
-    }
-  }
 }

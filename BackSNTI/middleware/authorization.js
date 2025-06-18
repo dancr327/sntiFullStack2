@@ -4,7 +4,9 @@ const Roles = require('../enums/roles.enum');
 
 const hasRole = (allowedRoles) => {
 
-const roles = rol_usuario
+const roles = rol_usuario;
+
+
 
   if (!Array.isArray(allowedRoles)) {
     throw new Error('Los roles deben ser un array');

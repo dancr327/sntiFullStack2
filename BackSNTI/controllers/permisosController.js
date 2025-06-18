@@ -158,7 +158,17 @@ const listarPermisos = async (req, res) => {
                         nombre: true,
                         apellido_paterno: true,
                         apellido_materno: true,
-                        identificador: true
+                        identificador: true,
+                        id_seccion: true,
+                        seccion: {
+                            select: {
+                                id_seccion: true,
+                                estado: true,
+                                numero_seccion: true,
+                                ubicacion: true,
+                                secretario: true
+                            }
+                        }
                     }
                 },
                 documentos: { // Incluir información del documento asociado
@@ -222,7 +232,17 @@ const obtenerPermisosPorTrabajador = async (req, res) => {
                         nombre: true,
                         apellido_paterno: true,
                         apellido_materno: true,
-                        identificador: true
+                        identificador: true,
+                        id_seccion: true,
+                            seccion: {
+                            select: {
+                                id_seccion: true,
+                                estado: true,
+                                numero_seccion: true,
+                                ubicacion: true,
+                                secretario: true
+                            }
+                        }
                     }
                 },
                 documentos: {

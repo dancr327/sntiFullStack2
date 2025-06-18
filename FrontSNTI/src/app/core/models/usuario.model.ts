@@ -9,8 +9,12 @@ export interface Usuario {
   numero_empleado: string;
   puesto: string;
   seccion: {
-    nombre_seccion: string;
-    descripcion: string;
+    id_seccion: number;
+    numero_seccion: number;
+    estado: string;
+    ubicacion: string;
+    secretario?: string;
+    // Si tienes más campos, agrégalos aquí
   };
   ultimo_login: string;
 }

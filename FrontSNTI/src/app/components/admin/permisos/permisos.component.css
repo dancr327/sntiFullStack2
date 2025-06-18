@@ -57,4 +57,39 @@
     flex-shrink: 0; /* Evita que se encoja */
     padding: 1px 0;
   }
+
+  /* Aumenta el tamaño de fuente para todo el contenido del modal de detalles */
+#detalleModal .modal-content {
+  font-size: 1.25rem;         /* Aumenta el tamaño general (20px aprox) */
+}
+
+/* Si quieres que solo el cuerpo del modal sea más grande: */
+#detalleModal .modal-body {
+  font-size: 1.35rem;         /* Un poco más grande (22px aprox) */
+}
+
+/* Opcional: Hacer los títulos aún más notorios */
+#detalleModal .modal-title,
+#detalleModal h6 {
+  font-size: 1.35rem;
+  font-weight: 500;
+}
+
+/* CREAR PERMISO MODAL */
+#permisoModal .modal-title,
+#permisoModal h6 {
+  font-size: 1.35rem;
+  font-weight: 500;
+}
+
+  /* Aumenta el tamaño de fuente para todo el contenido del modal de detalles */
+#permisoModal .modal-content {
+  font-size: 1.25rem;         /* Aumenta el tamaño general (20px aprox) */
+}
+
+/* Si quieres que solo el cuerpo del modal sea más grande: */
+#permisoModal .modal-body {
+  font-size: 1.35rem;         /* Un poco más grande (22px aprox) */
+}
+
   

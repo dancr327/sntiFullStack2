@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { MatTreeModule } from '@angular/material/tree';
 import { AuthService } from '../../../core/services/auth.service' //importo el servicio de autenticación para cerrar sesión
+import { Usuario } from '../../../core/models/usuario.model'; 
 @Component({
   selector: 'app-admin-sidebar',
   standalone: true,
@@ -25,6 +26,11 @@ export class AdminSidebarComponent {
   }
 
   constructor(private authService: AuthService) {}
+
+   get usuario(): Usuario | null {
+    return this.authService.currentUser;
+  }
+
   logout() {
     this.authService.logout();
   }

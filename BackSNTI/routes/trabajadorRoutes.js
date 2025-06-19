@@ -98,7 +98,7 @@ const Roles = require('../enums/roles.enum');
  *           example: "juan.perez@dominio.com"
  *         situacion_sentimental:
  *           type: string
- *           enum: [Soltero, Casado, Divorciado, Viudo, Union Libre]
+ *           enum: [Soltero, Casado, Divorciado, Viudo, Union_Libre]
  *           example: "Soltero"
  *         numero_hijos:
  *           type: integer
@@ -199,7 +199,7 @@ const Roles = require('../enums/roles.enum');
  *           maxLength: 150
  *         situacion_sentimental:
  *           type: string
- *           enum: [Soltero, Casado, Divorciado, Viudo, Union Libre]
+ *           enum: [Soltero, Casado, Divorciado, Viudo, Union_Libre]
  *         numero_hijos:
  *           type: integer
  *           minimum: 0

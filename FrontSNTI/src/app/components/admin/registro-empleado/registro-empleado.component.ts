@@ -1,11 +1,15 @@
 // registro-empleado.component.ts
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors, NgModel } from '@angular/forms';
-import { TrabajadoresService } from '../../../core/services/trabajadores.service';
-import { Trabajador } from '../../../core/models/trabajador.model';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router'; // Importa ActivatedRoute para obtener parámetros de la ruta
+
+import { TrabajadoresService } from '../../../core/services/trabajadores.service';
+import { Trabajador } from '../../../core/models/trabajador.model';
+
+import { SeccionesService } from '../../../core/services/secciones.service';
+import { Seccion } from '../../../core/models/seccion.model';
 
 // Validadores personalizados
 function emailsIgualesValidator(group: AbstractControl): ValidationErrors | null {
@@ -33,7 +37,8 @@ export class RegistroEmpleadoComponent implements OnInit {
   mensajeExito = '';
   mensajeError = '';
   certificadoNombre: string = '';
-  id_seccion_valor = 1;
+  secciones: Seccion[] = [];
+
   mensajeErroresCampos: { [key: string]: string } = {};
   trabajadorEdit: Trabajador | null = null; // Para editar un trabajador existente
 
@@ -76,7 +81,7 @@ export class RegistroEmpleadoComponent implements OnInit {
     nombre_puesto: ['', [Validators.required, Validators.maxLength(100)]],
     puesto_inpi: ['', [Validators.required, Validators.maxLength(100)]],
     adscripcion: ['', [Validators.required, Validators.maxLength(100)]],
-    id_seccion: [this.id_seccion_valor, [Validators.required]],
+    id_seccion: this.fb.control<number | null>(null, { validators: [Validators.required] }),
     nivel_estudios: ['', [Validators.required, Validators.maxLength(100)]],
     institucion_estudios: ['', [Validators.required, Validators.maxLength(200)]],
     certificado_estudios: [false],
@@ -94,7 +99,8 @@ export class RegistroEmpleadoComponent implements OnInit {
   constructor(
     private fb: FormBuilder, 
     private trabajadoresService: TrabajadoresService,
-    private route: ActivatedRoute // <---- aquí
+    private route: ActivatedRoute, // <---- aquí
+    private seccionesService: SeccionesService
   ) {}
 
   onFileChange(event: any) {
@@ -174,7 +180,7 @@ export class RegistroEmpleadoComponent implements OnInit {
       nombre_puesto: this.formEmpleado.value.nombre_puesto ?? '',
       puesto_inpi: this.formEmpleado.value.puesto_inpi ?? '',
       adscripcion: this.formEmpleado.value.adscripcion ?? '',
-      id_seccion: this.formEmpleado.value.id_seccion ?? 1,
+      id_seccion: this.formEmpleado.value.id_seccion,
       nivel_estudios: this.formEmpleado.value.nivel_estudios ?? '',
       institucion_estudios: this.formEmpleado.value.institucion_estudios ?? '',
       certificado_estudios: this.formEmpleado.value.certificado_estudios ?? false,
@@ -182,11 +188,6 @@ export class RegistroEmpleadoComponent implements OnInit {
       // Agregamos la contraseña al body POST:
     };
     
-  // const passValue = this.contrasena?.value;
-  // if (!this.trabajadorEdit || passValue) {
-  //   // En creación, siempre se incluye. En edición, solo si el admin escribe una nueva.
-  //   data['contraseña'] = passValue ?? '';
-  // }
 // Solo incluir contraseña si el usuario ingresó algo en los campos
 const password = this.contrasena?.value?.trim();
 if (password && password.length >= 6) {
@@ -235,7 +236,7 @@ if (password && password.length >= 6) {
   private resetearFormulario() {
     this.formEmpleado.reset({
       rol: 'USUARIO',
-      id_seccion: this.id_seccion_valor,
+      id_seccion: null,
       numero_hijos: 0,
       certificado_estudios: false
     });
@@ -288,6 +289,18 @@ setFormForEdit(trabajador: Trabajador) {
 
   // Métodos para manejar la edición de un trabajador
   ngOnInit() {
+     this.seccionesService.getSecciones().subscribe({
+      next: resp => {
+        if (resp.success) {
+          this.secciones = resp.data.sort((a, b) =>
+            a.estado.localeCompare(b.estado) ||
+            a.numero_seccion - b.numero_seccion
+          );
+        }
+      },
+      error: err => console.error('Error cargando secciones', err)
+    });
+
  // 1. Checa si hay id en la ruta
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {

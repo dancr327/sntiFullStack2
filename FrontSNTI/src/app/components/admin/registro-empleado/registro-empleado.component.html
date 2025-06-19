@@ -180,8 +180,13 @@
       <small *ngIf="mensajeErroresCampos['adscripcion']" class="text-danger">{{ mensajeErroresCampos['adscripcion'] }}</small>
     </div>
     <div class="form-group">
-      <label>Sección (ID numérico)</label>
-      <input type="number" class="form-control" formControlName="id_seccion" min="1" placeholder="Ej. 1">
+      <label>Sección</label>
+      <select class="form-control" formControlName="id_seccion">
+        <option value="" disabled selected>Selecciona</option>
+        <option *ngFor="let s of secciones" [value]="s.id_seccion">
+          {{ s.estado.replaceAll('_', ' ') }} - {{ s.numero_seccion }} - {{ s.ubicacion }}
+        </option>
+      </select>
       <small *ngIf="mensajeErroresCampos['id_seccion']" class="text-danger">{{ mensajeErroresCampos['id_seccion'] }}</small>
     </div>
     <div class="form-group">

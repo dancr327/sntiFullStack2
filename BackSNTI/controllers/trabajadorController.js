@@ -34,7 +34,7 @@ const validarTrabajador = [
         .matches(/^[A-Z]{4}\d{6}[0-9A-Z]{3}$/).withMessage('Formato de RFC inválido.'),
     body('email').optional().isEmail().withMessage('Formato de email inválido.').isLength({ max: 150 }).withMessage('El email no puede exceder 150 caracteres.'),
     body('situacion_sentimental').optional()
-        .isIn(['Soltero', 'Casado', 'Divorciado', 'Viudo', 'Union Libre']).withMessage('Valor de situación sentimental no válido.'),
+        .isIn(['Soltero', 'Casado', 'Divorciado', 'Viudo', 'Union_Libre']).withMessage('Valor de situación sentimental no válido.'),
     body('numero_hijos').optional().isInt({ min: 0 }).withMessage('Número de hijos inválido. Debe ser un número entero positivo.'),
     body('numero_empleado').optional()
         .isLength({ min: 10, max: 10 }).withMessage('El número de empleado debe tener 10 caracteres.'),

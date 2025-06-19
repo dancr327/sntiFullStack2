@@ -11,14 +11,17 @@
 
   <!-- Ejemplo de usuario -->
     <div class="user-info">
-      <div class="avatar-container">
-        <mat-icon class="avatar-icon">account_circle</mat-icon>
-      </div>
-      <div class="user-details">
-        <h3>Juan Perez</h3>
-        <p>Rol Usuario</p>
-      </div>
-    </div>
+  <div class="avatar-container">
+    <mat-icon class="avatar-icon">account_circle</mat-icon>
+  </div>
+  <div class="user-details">
+    <!-- Nombre completo del usuario -->
+    <h3 *ngIf="usuario as u">
+      {{ u.nombre }} {{ u.apellido_paterno }} {{ u.apellido_materno }}
+    </h3>
+    <p *ngIf="usuario as u">Rol {{ u.rol }}</p>
+  </div>
+</div>
   <!-- Menú -->
   <ul class="menu">
     <li class="menu-item" [routerLink]="['userperfil']" routerLinkActive="active">

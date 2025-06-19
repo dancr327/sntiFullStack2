@@ -4,4 +4,5 @@ export interface Seccion {
     estado: string; // si usas enum también cámbialo a ese tipo
     ubicacion: string;
     secretario?: string;
+    numero_trabajadores?: number;
 }

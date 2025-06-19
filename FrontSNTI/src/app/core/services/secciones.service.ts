@@ -19,5 +19,15 @@ export class SeccionesService {
   getSeccionPorId(id: number): Observable<{ success: boolean, data: Seccion }> {
     return this.http.get<{ success: boolean, data: Seccion }>(`${this.apiUrl}/${id}`);
   }
-  // Puedes agregar métodos POST, PUT, DELETE si vas a administrar las secciones desde el frontend
+  crearSeccion(seccion: Partial<Seccion>) {
+    return this.http.post(this.apiUrl, seccion);
+  }
+
+  actualizarSeccion(id: number, seccion: Partial<Seccion>) {
+    return this.http.patch(`${this.apiUrl}/${id}`, seccion);
+  }
+
+  eliminarSeccion(id: number) {
+    return this.http.delete(`${this.apiUrl}/${id}`);
+  }
 }

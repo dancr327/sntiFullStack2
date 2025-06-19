@@ -10,6 +10,8 @@ import { NgClass, CommonModule } from '@angular/common';
 import { SeccionesService } from '../../../core/services/secciones.service';
 import { Seccion } from '../../../core/models/seccion.model';
 
+import { AuthService } from '../../../core/services/auth.service';
+import { Usuario } from '../../../core/models/usuario.model';
 
 @Component({
   selector: 'app-trabajadores',
@@ -25,19 +27,33 @@ export class TrabajadoresComponent implements OnInit {
 
   // Variables para el filtro de búsqueda
   filtroBusqueda: string = '';
-  // filtroRol: string = '';
+  filtroEstado: string = '';
   filtroSeccion: number | '' = '';
-  // filtroSexo: string = '';
+  usuarioActual: Usuario | null = null;
 
   constructor(
     private trabajadoresService: TrabajadoresService,
     private seccionesService: SeccionesService,
-    private router: Router, // <-- para navegar a otras rutas
-    private route: ActivatedRoute // <-- y esto para rutas hijas
+    private authService: AuthService,
+    private router: Router // <-- para navegar a otras rutas
   ) {}
 
   ngOnInit(): void {
+    // Obtener usuario logueado
+    this.usuarioActual = this.authService.currentUser;
+    // por defecto, el estado del filtro será el del usuario actual (si tiene)
+    if (this.usuarioActual?.seccion?.estado) {
+      this.filtroEstado = this.usuarioActual.seccion.estado;
+    }
+    // Por defecto, seleccionar la sección del usuario (si tiene)
+    if (this.usuarioActual?.seccion?.id_seccion) {
+      this.filtroSeccion = this.usuarioActual.seccion.id_seccion;
+    }
+    this.cargarSecciones();
     this.cargarTrabajadores();
+  }
+
+  cargarSecciones(): void {
     this.seccionesService.getSecciones().subscribe({
       next: (resp) => {
         if (resp.success) {
@@ -53,7 +69,7 @@ export class TrabajadoresComponent implements OnInit {
       next: (resp) => {
         // Asegúrate de que resp.data es el array de trabajadores según tu API
         this.trabajadores = resp.data || [];
-        this.trabajadoresFiltrados = [...this.trabajadores];
+        this.filtrarTrabajadores(); // ¡Aplicar el filtro de sección desde el inicio!
       },
       error: (err) => {
         console.error('Error al obtener trabajadores:', err);
@@ -77,18 +93,20 @@ export class TrabajadoresComponent implements OnInit {
         t.numero_empleado.toLowerCase().includes(filtroBusquedaLower) ||
         t.numero_plaza.toLowerCase().includes(filtroBusquedaLower);
 
-      // Filtro por sección
-      let coincideSeccion = true;
-      if (
-        this.filtroSeccion !== '' &&
-        this.filtroSeccion !== null &&
-        this.filtroSeccion !== undefined
-      ) {
-        coincideSeccion = t.id_seccion === Number(this.filtroSeccion);
-      }
+      // Filtro por estado (de la sección del trabajador)
+    let coincideEstado = true;
+    if (this.filtroEstado) {
+      coincideEstado = t.seccion?.estado === this.filtroEstado;
+    }
 
-      return coincideBusqueda && coincideSeccion;
-    });
+    // Filtro por sección
+    let coincideSeccion = true;
+    if (this.filtroSeccion) {
+      coincideSeccion = t.id_seccion === Number(this.filtroSeccion);
+    }
+
+    return coincideBusqueda && coincideEstado && coincideSeccion;
+  });
   }
 
   // Ejemplo de funciones para los botones (puedes implementar la lógica que necesites)
@@ -106,27 +124,49 @@ export class TrabajadoresComponent implements OnInit {
     });
   }
 
-editarTrabajador(id: number) {
-// Navega a la ruta de edición del trabajador
-  this.router.navigate(['/admin/editar-trabajador', id]);
-}
+  editarTrabajador(id: number) {
+    // Navega a la ruta de edición del trabajador
+    this.router.navigate(['/admin/editar-trabajador', id]);
+  }
 
   eliminarTrabajador(id: number) {
     // Mensaje de confirmación (puedes mejorar con un modal)
-  if (!confirm('¿Estás seguro de que deseas eliminar este trabajador?')) {
-    return;
-  }
-  this.trabajadoresService.eliminarTrabajador(id).subscribe({
-    next: () => {
-      // Elimina localmente para feedback inmediato:
-      this.trabajadores = this.trabajadores.filter(t => t.id_trabajador !== id);
-      this.filtrarTrabajadores(); // Aplica el filtro actualizado
-      alert('Trabajador eliminado exitosamente');
-    },
-    error: (err) => {
-      console.error('Error al eliminar trabajador:', err);
-      alert('No se pudo eliminar el trabajador. Intenta nuevamente.');
+    if (!confirm('¿Estás seguro de que deseas eliminar este trabajador?')) {
+      return;
     }
-  });
+    this.trabajadoresService.eliminarTrabajador(id).subscribe({
+      next: () => {
+        // Elimina localmente para feedback inmediato:
+        this.trabajadores = this.trabajadores.filter(
+          (t) => t.id_trabajador !== id
+        );
+        this.filtrarTrabajadores(); // Aplica el filtro actualizado
+        alert('Trabajador eliminado exitosamente');
+      },
+      error: (err) => {
+        console.error('Error al eliminar trabajador:', err);
+        alert('No se pudo eliminar el trabajador. Intenta nuevamente.');
+      },
+    });
+  }
+
+  //<---Helpers para el filtro de secciones y estados--->
+  get estadosUnicos(): string[] {
+    // Genera un array único de estados de tus secciones
+    const set = new Set(this.secciones.map((s) => s.estado));
+    return Array.from(set);
+  }
+
+  get seccionesFiltradasPorEstado(): Seccion[] {
+    // Solo muestra las secciones del estado seleccionado
+    return this.filtroEstado
+      ? this.secciones.filter((s) => s.estado === this.filtroEstado)
+      : this.secciones;
+  }
+
+  onCambioEstado(): void {
+    // Al cambiar estado, limpia filtro de sección y filtra
+    this.filtroSeccion = '';
+    this.filtrarTrabajadores();
   }
 }

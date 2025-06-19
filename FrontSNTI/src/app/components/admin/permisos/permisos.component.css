@@ -1,4 +1,3 @@
-/* Colores azules claros */
 .bg-light-blue {
   background-color: #74c0fc !important;
 }
@@ -15,81 +14,57 @@
   color: white;
 }
 
-/* Estilos adicionales */
+/* Efecto hover en tabla */
 .table-hover tbody tr:hover {
-  background-color: rgba(116, 192, 252, 0.1);
+  background-color: rgba(116, 192, 252, 0.12);
 }
 
-.modal-content {
+.card, .modal-content {
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.06);
   border: none;
-  border-radius: 0.5rem;
-  overflow: hidden;
 }
 
-.card {
-  border-radius: 0.5rem;
-  overflow: hidden;
+.badge.bg-warning { background-color: #ffc107 !important; color: #212529; }
+.badge.bg-success { background-color: #198754 !important; }
+.badge.bg-secondary { background-color: #6c757d !important; }
+
+.table th, .table thead th, .bg-light-blue.text-white {
+  background-color: #74c0fc !important;
+  color: #fff !important;
+  white-space: nowrap;
 }
 
-.badge.bg-warning {
-  background-color: #ffc107 !important;
-  color: #212529;
+/* Responsive: apila filtros y tabla en móviles */
+.filtros-form .form-select,
+.filtros-form .form-control {
+  min-width: 120px;
 }
-
-.badge.bg-success {
-  background-color: #198754 !important;
-}
-    
-  /* Contenedor del contenido */
-  .main-content-wrapper {
-    display: flex;
-    flex: 1; /* Ocupa todo el espacio disponible */
+@media (max-width: 768px) {
+  .filtros-form > .col-md-6,
+  .filtros-form > .col-md-3,
+  .filtros-form > .col-md-2 {
+    flex: 0 0 100%;
+    max-width: 100%;
+    margin-bottom: 0.5rem;
   }
-  
-  /* Barra lateral */
-  .sidebar {
-    width: 250px; /* Ancho de la barra */
-
-    position: sticky;
-    top: auto; /* Igual que la altura del header */
-    height: calc(150vh - 60px - 60px); /* 100vh - header - footer */
-    overflow-y: auto; /* Scroll si el contenido es largo */
-    flex-shrink: 0; /* Evita que se encoja */
-    padding: 1px 0;
+  .btn-light-blue, .btn-success {
+    width: 100%;
+    margin-top: 0.5rem;
   }
-
-  /* Aumenta el tamaño de fuente para todo el contenido del modal de detalles */
-#detalleModal .modal-content {
-  font-size: 1.25rem;         /* Aumenta el tamaño general (20px aprox) */
+  .card-body {
+    padding: 1rem 0.3rem;
+  }
+  .table-responsive {
+    font-size: 0.96rem;
+  }
 }
 
-/* Si quieres que solo el cuerpo del modal sea más grande: */
-#detalleModal .modal-body {
-  font-size: 1.35rem;         /* Un poco más grande (22px aprox) */
+#detalleModal .modal-content, #permisoModal .modal-content {
+  font-size: 1.16rem;
 }
-
-/* Opcional: Hacer los títulos aún más notorios */
-#detalleModal .modal-title,
-#detalleModal h6 {
-  font-size: 1.35rem;
+#detalleModal .modal-title, #detalleModal h6,
+#permisoModal .modal-title, #permisoModal h6 {
+  font-size: 1.2rem;
   font-weight: 500;
 }
-
-/* CREAR PERMISO MODAL */
-#permisoModal .modal-title,
-#permisoModal h6 {
-  font-size: 1.35rem;
-  font-weight: 500;
-}
-
-  /* Aumenta el tamaño de fuente para todo el contenido del modal de detalles */
-#permisoModal .modal-content {
-  font-size: 1.25rem;         /* Aumenta el tamaño general (20px aprox) */
-}
-
-/* Si quieres que solo el cuerpo del modal sea más grande: */
-#permisoModal .modal-body {
-  font-size: 1.35rem;         /* Un poco más grande (22px aprox) */
-}
-
-  

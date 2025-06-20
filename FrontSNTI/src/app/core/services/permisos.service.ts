@@ -20,6 +20,10 @@ export class PermisosService {
   eliminarPermiso(id: number) {
     return this.http.delete(`${this.apiUrl}/${id}`);
   }
+  // Método para obtener los permisos del usuario autenticado
+  getMisPermisos(): Observable<{ success: boolean; data: Permiso[] }> {
+    return this.http.get<{ success: boolean; data: Permiso[] }>(`${this.apiUrl}/mi-permiso`);
+  }
 
   descargarDocumento(id_documento: number) {
   return this.http.get(`http://localhost:3000/permisos/documento/${id_documento}/descargar`, {

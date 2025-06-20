@@ -1,62 +1,66 @@
-import { Component } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Router } from '@angular/router';
-import { Injectable } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms'; 
-import { SidebarComponent  } from '../sidebar/sidebar.component';
+import { MatIconModule } from '@angular/material/icon';
+import { PermisosService } from '../../../core/services/permisos.service';
+import { Permiso } from '../../../core/models/permiso.model';
 
 @Component({
   selector: 'app-userpermiso',
   standalone: true,
-  imports: [CommonModule, FormsModule, SidebarComponent],
+  imports: [CommonModule, MatIconModule],
   templateUrl: './userpermiso.component.html',
   styleUrl: './userpermiso.component.css'
 })
-export class UserpermisoComponent {
-  permiso = {
-    id_trabajador: null,
-    tipo_permiso: '',
-    fecha_inicio: '',
-    fecha_fin: '',
-    motivo: '',
-    estatus: 'Pendiente', // Valor por defecto
-    documento_aprobacion_id: null
-  };
+export class UserpermisoComponent implements OnInit {
+  permisos: Permiso[] = [];
+  permisosActivos: Permiso[] = [];
+  permisosCaducados: Permiso[] = [];
 
-  constructor(private http: HttpClient, private router: Router) {}
+  constructor(private permisosService: PermisosService) {}
 
-  solicitarPermiso() {
-    // Llamar a la función PostgreSQL a través de tu API
-    this.http.post('/api/permisos', this.permiso).subscribe({
-      next: (response) => {
-        alert('Permiso solicitado correctamente');
-        this.router.navigate(['/mis-permisos']);
+  ngOnInit(): void {
+    this.cargarPermisos();
+  }
+
+  cargarPermisos(): void {
+    this.permisosService.getMisPermisos().subscribe({
+      next: (resp) => {
+        this.permisos = resp.data || [];
+        this.categorizarPermisos();
       },
       error: (err) => {
-        console.error('Error al solicitar permiso:', err);
-        alert('Error al solicitar permiso');
+        console.error('Error al obtener permisos:', err);
+        this.permisos = [];
+        this.permisosActivos = [];
+        this.permisosCaducados = [];
       }
     });
   }
-
-  cancelar() {
-    if(confirm('¿Está seguro que desea cancelar la solicitud?')) {
-      this.router.navigate(['/dashboard']);
-    }
-  }
-
-}
-@Injectable({
-  providedIn: 'root'
-})
-export class PermisoService {
-  private apiUrl = '/api/permisos';
-
-  constructor(private http: HttpClient) { }
-
-  insertarPermiso(permisoData: any) {
-    return this.http.post(`${this.apiUrl}/insertar`, permisoData);
+  categorizarPermisos(): void {
+    const hoy = new Date().setHours(0, 0, 0, 0);
+    this.permisosActivos = this.permisos.filter(p => new Date(p.fecha_fin).getTime() >= hoy);
+    this.permisosCaducados = this.permisos.filter(p => new Date(p.fecha_fin).getTime() < hoy);
   }
   
+  descargarDocumento(permiso: Permiso): void {
+    if (!permiso.documentos) {
+      alert('No hay documento para descargar.');
+      return;
+    }
+    const nombre = permiso.documentos.nombre_archivo || 'documento.pdf';
+    this.permisosService.descargarDocumento(permiso.documentos.id_documento).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = nombre;
+        a.click();
+        window.URL.revokeObjectURL(url);
+      },
+      error: (err) => {
+        alert('No se pudo descargar el documento.');
+        console.error(err);
+      }
+    });
+  }
 }

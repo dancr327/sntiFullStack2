@@ -179,20 +179,34 @@
               La fecha de finalización no puede ser anterior a la fecha de inicio.
             </div>
             <div class="mb-3">
-              <label class="form-label">Motivo/Descripción</label>
-              <textarea
-                class="form-control"
-                rows="3"
-                [(ngModel)]="nuevaPermiso.motivo"
-                name="motivo"
-                required
-              ></textarea>
-            </div>
-            <div class="mb-3">
-              <label class="form-label">Documento que avala el permiso</label>
-              <input
-                type="file"
-                class="form-control"
+                <label class="form-label">Motivo/Descripción</label>
+                <textarea
+                  class="form-control"
+                  rows="3"
+                  [(ngModel)]="nuevaPermiso.motivo"
+                  name="motivo"
+                  required
+                ></textarea>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Estatus</label>
+                <select
+                  class="form-select"
+                  [(ngModel)]="nuevaPermiso.estatus"
+                  name="estatus"
+                  required
+                >
+                  <option value="" disabled selected>Seleccionar estatus</option>
+                  <option value="Pendiente">Pendiente</option>
+                  <option value="Activa">Activa</option>
+                  <option value="Inactiva">Inactiva</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Documento que avala el permiso</label>
+                <input
+                  type="file"
+                  class="form-control"
                 (change)="onFileSelected($event)"
                 accept=".pdf,.doc,.docx,.jpg,.png"
                 required

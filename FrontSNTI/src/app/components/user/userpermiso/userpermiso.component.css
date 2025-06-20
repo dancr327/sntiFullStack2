@@ -1,63 +1,59 @@
-/* Color morado personalizado */
+/* Colores morados y botones */
 .bg-purple {
-    background-color: #74c0fc;
-  }
-  
-  .btn-purple {
-    background-color: #74c0fc;
-    color: white;
-    border-color: #74c0fc;
-  }
-  
-  .btn-purple:hover {
-    background-color: #74c0fc;
-    border-color: #74c0fc;
-    color: white;
-  }
-  
-  /* Estilo para el card */
-  .card {
-    border-radius: 10px;
-    border: none;
-  }
-  
-  .card-header {
-    border-radius: 10px 10px 0 0 !important;
-  }
-  
-  /* Estilo para los inputs */
-  .form-control, .form-select {
-    border-radius: 5px;
-    border: 1px solid #ddd;
-    padding: 10px;
-  }
-  
-  .form-control:focus, .form-select:focus {
-    border-color: #74c0fc;
-    box-shadow: 0 0 0 0.25rem rgba(111, 66, 193, 0.25);
-  }
-  .main-content-wrapper {
-    display: flex;
-    flex: 1; /* Ocupa todo el espacio disponible */
-  }
-  
-  /* Barra lateral */
-  .sidebar {
-    width: 250px; /* Ancho de la barra */
+  background-color: #74c0fc;
+}
 
-    position: sticky;
-    top: auto; /* Igual que la altura del header */
-    height: calc(150vh - 60px - 60px); /* 100vh - header - footer */
-    overflow-y: auto; /* Scroll si el contenido es largo */
-    flex-shrink: 0; /* Evita que se encoja */
-    padding: 1px 0;
-  }
-  /* Estilos para el formulario (se mantienen igual) */
-
-/* Nuevos estilos para la tabla de permisos */
-.table-purple {
+.btn {
   background-color: #74c0fc;
   color: white;
+  border-color: #74c0fc;
+}
+
+.btn:hover {
+  background-color: #74c0fc;
+  border-color: #74c0fc;
+  color: white;
+}
+
+.btn-outline {
+  color: #74c0fc;
+  border-color: #74c0fc;
+}
+
+.btn-outline:hover {
+  background-color: #74c0fc;
+  color: white;
+}
+
+/* Tabla y tarjetas */
+.table-hover tbody tr:hover {
+  background-color: rgba(116, 192, 252, 0.12);
+}
+
+.card {
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.06);
+  border: none;
+}
+
+.card-header h3 {
+  font-size: 1.2rem;
+  font-weight: 500;
+}
+
+.table-purple,
+.bg-purple.text-white,
+.table th,
+.table thead th {
+  background-color: #74c0fc !important;
+  color: #fff !important;
+  white-space: nowrap;
+}
+
+/* Contenedor principal */
+.main-content-wrapper {
+  display: flex;
+  flex: 1;
 }
 
 .badge {
@@ -67,32 +63,10 @@
   border-radius: 0.25rem;
 }
 
-.bg-success {
-  background-color: #198754 !important;
-}
-
-.bg-danger {
-  background-color: #dc3545 !important;
-}
-
-.bg-warning {
-  background-color: #ffc107 !important;
-  color: #000 !important;
-}
-
-.bg-secondary {
-  background-color: #6c757d !important;
-}
-
-.text-purple {
+.subtitle {
   color: #74c0fc !important;
-}
-
-/* Spinner de carga */
-.spinner-border {
-  width: 3rem;
-  height: 3rem;
-  border-width: 0.25em;
+  font-size:  1.3rem;
+  font-weight: 450;
 }
 
 /* Responsive */
@@ -100,9 +74,14 @@
   .container-fluid {
     padding: 0;
   }
-  
-  .col-md-3, .col-md-9 {
+
+  .col-md-3,
+  .col-md-9 {
     width: 100%;
     padding: 0;
+  }
+
+  .table-responsive {
+    font-size: 0.96rem;
   }
 }

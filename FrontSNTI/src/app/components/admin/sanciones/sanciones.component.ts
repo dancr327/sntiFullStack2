@@ -1,100 +1,133 @@
-import { Component, OnInit  } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
-import { RouterLink } from '@angular/router';
-import { AdminbarraComponent } from '../adminbarra/adminbarra.component';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { MatCardModule } from '@angular/material/card';
+
+import { SancionesService } from '../../../core/services/sanciones.service';
+import { TrabajadoresService } from '../../../core/services/trabajadores.service';
+import { AuthService } from '../../../core/services/auth.service';
+
+import { Sancion } from '../../../core/models/sancion.model';
+import { Trabajador } from '../../../core/models/trabajador.model';
+import { Usuario } from '../../../core/models/usuario.model';
 
 @Component({
   selector: 'app-sanciones',
   standalone: true,
-  imports: [MatIconModule, RouterLink, AdminbarraComponent, CommonModule,FormsModule ],
+  imports: [MatIconModule, MatCardModule, CommonModule, FormsModule],
   templateUrl: './sanciones.component.html',
-  styleUrl: './sanciones.component.css'
+  styleUrl: './sanciones.component.css',
 })
 export class SancionesComponent implements OnInit {
   filtroBusqueda: string = '';
-  sanciones: any[] = [];
-  sancionesFiltradas: any[] = [];
-  trabajadores: any[] = [];
-  archivoSeleccionado: File | null = null;
-  sancionSeleccionada: any = null;
-  
-  nuevaSancion = {
-    trabajador_id: '',
-    trabajador_nombre: '',
-    tipo: '',
+  sanciones: Sancion[] = [];
+  sancionesFiltradas: Sancion[] = [];
+  trabajadores: Trabajador[] = [];
+  sancionSeleccionada: Sancion | null = null;
+
+  usuarioActual: Usuario | null = null;
+
+  nuevaSancion: any = {
+    id_trabajador: '',
+    tipo_sancion: '',
     descripcion: '',
     fecha_aplicacion: '',
     fecha_fin: '',
     estatus: 'Activa',
-    documento: null as string | null,
-    fecha_registro: new Date()
   };
 
+  constructor(
+    private sancionesService: SancionesService,
+    private trabajadoresService: TrabajadoresService,
+    private authService: AuthService
+  ) {}
+
   ngOnInit(): void {
-    // Datos de ejemplo
-    this.trabajadores = [
-   
-    ];
-    
-    this.sanciones = [
-      {
-       
-      },
-      {
-        
-      }
-    ];
-    
-    this.sancionesFiltradas = [...this.sanciones];
+    this.usuarioActual = this.authService.currentUser;
+    this.cargarSanciones();
+    this.cargarTrabajadores();
   }
 
-  onFileSelected(event: any): void {
-    this.archivoSeleccionado = event.target.files[0];
+  cargarTrabajadores(): void {
+    this.trabajadoresService.getTrabajadores().subscribe({
+      next: (resp) => {
+        const todos: Trabajador[] = resp.data || [];
+        if (this.usuarioActual?.seccion?.id_seccion) {
+          this.trabajadores = todos.filter(
+            (t: Trabajador) =>
+              t.id_seccion === this.usuarioActual!.seccion.id_seccion
+          );
+        } else if (this.usuarioActual?.seccion?.estado) {
+          this.trabajadores = todos.filter(
+            (t: Trabajador) =>
+              t.seccion?.estado === this.usuarioActual!.seccion.estado
+          );
+        } else {
+          this.trabajadores = todos;
+        }
+      },
+      error: (err) => {
+        this.trabajadores = [];
+        console.error('Error al obtener trabajadores:', err);
+      },
+    });
+  }
+
+  cargarSanciones(): void {
+    this.sancionesService.getSanciones().subscribe({
+      next: (resp) => {
+        let todos = resp.data || [];
+        if (this.usuarioActual?.seccion?.id_seccion) {
+          todos = todos.filter(
+            (s) =>
+              s.trabajadores &&
+              s.trabajadores.seccion &&
+              s.trabajadores.seccion.id_seccion ===
+                this.usuarioActual!.seccion.id_seccion
+          );
+        } else if (this.usuarioActual?.seccion?.estado) {
+          todos = todos.filter(
+            (s) =>
+              s.trabajadores &&
+              s.trabajadores.seccion &&
+              s.trabajadores.seccion.estado ===
+                this.usuarioActual!.seccion.estado
+          );
+        }
+        this.sanciones = todos;
+        this.sancionesFiltradas = [...todos];
+      },
+      error: (err) => {
+        this.sanciones = [];
+        this.sancionesFiltradas = [];
+        console.error('Error al obtener sanciones:', err);
+      },
+    });
   }
 
   guardarSancion(): void {
-    // Asignar nombre del trabajador
-    const trabajador = this.trabajadores.find(t => t.id == this.nuevaSancion.trabajador_id);
-    if (trabajador) {
-      this.nuevaSancion.trabajador_nombre = `${trabajador.nombre} ${trabajador.apellido}`;
-    }
-    
-    // Asignar documento si se seleccionó
-    if (this.archivoSeleccionado) {
-      this.nuevaSancion.documento = this.archivoSeleccionado.name;
-    }
-    
-    // Generar ID y agregar sanción
-    const nuevaId = this.sanciones.length > 0 
-      ? Math.max(...this.sanciones.map(s => s.id)) + 1 
-      : 1;
-    
-    const sancion = {
-      ...this.nuevaSancion,
-      id: nuevaId
-    };
-    
-    this.sanciones.unshift(sancion);
-    this.sancionesFiltradas = [...this.sanciones];
-    this.resetForm();
-    
-    // Cerrar modal
-    document.getElementById('closeModal')?.click();
+    this.sancionesService.crearSancion(this.nuevaSancion).subscribe({
+      next: () => {
+        this.cargarSanciones();
+        this.resetForm();
+        const modalEl = document.getElementById('sancionModal');
+        if (modalEl)
+          (window as any).bootstrap?.Modal.getInstance(modalEl)?.hide();
+        alert('Sanción creada exitosamente.');
+      },
+      error: (err) => {
+        alert('No se pudo guardar la sanción. Intenta nuevamente.');
+        console.error(err);
+      },
+    });
   }
 
-  eliminarSancion(id: number): void {
-    if (confirm('¿Está seguro de eliminar esta sanción?')) {
-      this.sanciones = this.sanciones.filter(s => s.id !== id);
-      this.sancionesFiltradas = [...this.sanciones];
-    }
-  }
-
-  verDetalles(sancion: any): void {
+  verDetalles(sancion: Sancion): void {
     this.sancionSeleccionada = sancion;
-    // Mostrar modal de detalles
-    // Necesitarías Bootstrap JS o ng-bootstrap para esto
+    const modalEl = document.getElementById('detalleModal');
+    if (modalEl)
+      (window as any).bootstrap?.Modal.getOrCreateInstance(modalEl).show();
   }
 
   filtrarSanciones(): void {
@@ -102,29 +135,29 @@ export class SancionesComponent implements OnInit {
       this.sancionesFiltradas = [...this.sanciones];
       return;
     }
-    
+
     const termino = this.filtroBusqueda.toLowerCase();
-    this.sancionesFiltradas = this.sanciones.filter(s =>
-      s.trabajador_nombre.toLowerCase().includes(termino) ||
-      s.tipo.toLowerCase().includes(termino) ||
-      s.descripcion.toLowerCase().includes(termino) ||
-      s.estatus.toLowerCase().includes(termino)
+    this.sancionesFiltradas = this.sanciones.filter(
+      (s) =>
+        `${s.trabajadores.nombre} ${s.trabajadores.apellido_paterno} ${s.trabajadores.apellido_materno}`
+          .toLowerCase()
+          .includes(termino) ||
+        (s.tipo_sancion ?? '').toLowerCase().includes(termino) ||
+        s.descripcion.toLowerCase().includes(termino) ||
+        (s.estatus ?? '').toLowerCase().includes(termino)
     );
   }
 
   resetForm(): void {
     this.nuevaSancion = {
-      trabajador_id: '',
-      trabajador_nombre: '',
-      tipo: '',
+      id_trabajador: '',
+      tipo_sancion: '',
       descripcion: '',
       fecha_aplicacion: '',
       fecha_fin: '',
       estatus: 'Activa',
       documento: null,
-      fecha_registro: new Date()
+      fecha_registro: new Date(),
     };
-    this.archivoSeleccionado = null;
   }
-
 }

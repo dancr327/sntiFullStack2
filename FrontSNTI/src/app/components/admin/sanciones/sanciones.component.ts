@@ -1,8 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
+import { RouterLink } from '@angular/router';
+import { AdminbarraComponent } from '../adminbarra/adminbarra.component';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MatCardModule } from '@angular/material/card';
 
 import { SancionesService } from '../../../core/services/sanciones.service';
 import { TrabajadoresService } from '../../../core/services/trabajadores.service';
@@ -15,9 +16,9 @@ import { Usuario } from '../../../core/models/usuario.model';
 @Component({
   selector: 'app-sanciones',
   standalone: true,
-  imports: [MatIconModule, MatCardModule, CommonModule, FormsModule],
+  imports: [MatIconModule, RouterLink, AdminbarraComponent, CommonModule, FormsModule],
   templateUrl: './sanciones.component.html',
-  styleUrl: './sanciones.component.css',
+  styleUrl: './sanciones.component.css'
 })
 export class SancionesComponent implements OnInit {
   filtroBusqueda: string = '';
@@ -34,7 +35,7 @@ export class SancionesComponent implements OnInit {
     descripcion: '',
     fecha_aplicacion: '',
     fecha_fin: '',
-    estatus: 'Activa',
+    estatus: 'Activa'
   };
 
   constructor(
@@ -45,8 +46,8 @@ export class SancionesComponent implements OnInit {
 
   ngOnInit(): void {
     this.usuarioActual = this.authService.currentUser;
-    this.cargarSanciones();
     this.cargarTrabajadores();
+    this.cargarSanciones();
   }
 
   cargarTrabajadores(): void {
@@ -55,79 +56,73 @@ export class SancionesComponent implements OnInit {
         const todos: Trabajador[] = resp.data || [];
         if (this.usuarioActual?.seccion?.id_seccion) {
           this.trabajadores = todos.filter(
-            (t: Trabajador) =>
-              t.id_seccion === this.usuarioActual!.seccion.id_seccion
+            (t) => t.id_seccion === this.usuarioActual!.seccion.id_seccion
           );
         } else if (this.usuarioActual?.seccion?.estado) {
           this.trabajadores = todos.filter(
-            (t: Trabajador) =>
-              t.seccion?.estado === this.usuarioActual!.seccion.estado
+            (t) => t.seccion?.estado === this.usuarioActual!.seccion.estado
           );
         } else {
           this.trabajadores = todos;
         }
       },
-      error: (err) => {
+      error: () => {
         this.trabajadores = [];
-        console.error('Error al obtener trabajadores:', err);
-      },
+      }
     });
   }
 
   cargarSanciones(): void {
     this.sancionesService.getSanciones().subscribe({
       next: (resp) => {
-        let todos = resp.data || [];
-        if (this.usuarioActual?.seccion?.id_seccion) {
-          todos = todos.filter(
-            (s) =>
-              s.trabajadores &&
-              s.trabajadores.seccion &&
-              s.trabajadores.seccion.id_seccion ===
-                this.usuarioActual!.seccion.id_seccion
-          );
-        } else if (this.usuarioActual?.seccion?.estado) {
-          todos = todos.filter(
-            (s) =>
-              s.trabajadores &&
-              s.trabajadores.seccion &&
-              s.trabajadores.seccion.estado ===
-                this.usuarioActual!.seccion.estado
-          );
-        }
-        this.sanciones = todos;
-        this.sancionesFiltradas = [...todos];
+        this.sanciones = resp.data || [];
+        this.sancionesFiltradas = [...this.sanciones];
       },
-      error: (err) => {
+      error: () => {
         this.sanciones = [];
         this.sancionesFiltradas = [];
-        console.error('Error al obtener sanciones:', err);
-      },
+      }
     });
   }
 
   guardarSancion(): void {
+    const inicio = new Date(this.nuevaSancion.fecha_aplicacion);
+    const fin = new Date(this.nuevaSancion.fecha_fin);
+    if (inicio > fin) {
+      alert('La fecha de finalización no puede ser antes que la fecha de aplicación.');
+      return;
+    }
+
     this.sancionesService.crearSancion(this.nuevaSancion).subscribe({
       next: () => {
         this.cargarSanciones();
         this.resetForm();
         const modalEl = document.getElementById('sancionModal');
-        if (modalEl)
+        if (modalEl) {
           (window as any).bootstrap?.Modal.getInstance(modalEl)?.hide();
+        }
         alert('Sanción creada exitosamente.');
       },
       error: (err) => {
-        alert('No se pudo guardar la sanción. Intenta nuevamente.');
+        alert('No se pudo guardar la sanción.');
         console.error(err);
-      },
+      }
     });
+  }
+
+  eliminarSancion(id: number): void {
+    if (confirm('¿Está seguro de eliminar esta sanción?')) {
+      this.sanciones = this.sanciones.filter((s) => s.id_sancion !== id);
+      this.sancionesFiltradas = [...this.sanciones];
+    }
   }
 
   verDetalles(sancion: Sancion): void {
     this.sancionSeleccionada = sancion;
     const modalEl = document.getElementById('detalleModal');
-    if (modalEl)
+    if (modalEl) {
       (window as any).bootstrap?.Modal.getOrCreateInstance(modalEl).show();
+    }
   }
 
   filtrarSanciones(): void {
@@ -135,17 +130,30 @@ export class SancionesComponent implements OnInit {
       this.sancionesFiltradas = [...this.sanciones];
       return;
     }
-
     const termino = this.filtroBusqueda.toLowerCase();
-    this.sancionesFiltradas = this.sanciones.filter(
-      (s) =>
-        `${s.trabajadores.nombre} ${s.trabajadores.apellido_paterno} ${s.trabajadores.apellido_materno}`
-          .toLowerCase()
-          .includes(termino) ||
-        (s.tipo_sancion ?? '').toLowerCase().includes(termino) ||
-        s.descripcion.toLowerCase().includes(termino) ||
-        (s.estatus ?? '').toLowerCase().includes(termino)
+    this.sancionesFiltradas = this.sanciones.filter((s) =>
+      `${s.trabajadores.nombre} ${s.trabajadores.apellido_paterno} ${s.trabajadores.apellido_materno || ''}`
+        .toLowerCase()
+        .includes(termino) ||
+      (s.tipo_sancion ?? '').toLowerCase().includes(termino) ||
+      s.descripcion.toLowerCase().includes(termino) ||
+      (s.estatus ?? '').toLowerCase().includes(termino)
     );
+  }
+
+  get minFechaAplicacion(): string {
+    const hoy = new Date();
+    hoy.setMonth(hoy.getMonth() - 3);
+    const yyyy = hoy.getFullYear();
+    const mm = String(hoy.getMonth() + 1).padStart(2, '0');
+    const dd = String(hoy.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  }
+
+  get fechaFinInvalida(): boolean {
+    const inicio = this.nuevaSancion.fecha_aplicacion;
+    const fin = this.nuevaSancion.fecha_fin;
+    return inicio && fin && fin < inicio;
   }
 
   resetForm(): void {
@@ -155,9 +163,7 @@ export class SancionesComponent implements OnInit {
       descripcion: '',
       fecha_aplicacion: '',
       fecha_fin: '',
-      estatus: 'Activa',
-      documento: null,
-      fecha_registro: new Date(),
+      estatus: 'Activa'
     };
   }
 }

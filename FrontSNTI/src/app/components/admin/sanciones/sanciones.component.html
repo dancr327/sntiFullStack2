@@ -47,8 +47,10 @@
             <tr *ngFor="let sancion of sancionesFiltradas">
               <td class="d-none d-md-table-cell">{{ sancion.id_sancion }}</td>
               <td>
-                {{ sancion.trabajadores.nombre }} {{ sancion.trabajadores.apellido_paterno }}
-                {{ sancion.trabajadores.apellido_materno }}
+                <div class="d-flex flex-column">
+                  <span class="fw-bold d-sm-none">ID: {{sancion.id_sancion}}</span>
+                      {{sancion.trabajadores.nombre}} {{sancion.trabajadores.apellido_paterno}} {{sancion.trabajadores.apellido_materno}}
+                </div>
               </td>
               <td class="d-none d-sm-table-cell">{{ sancion.tipo_sancion }}</td>
               <td class="d-none d-lg-table-cell">
@@ -79,6 +81,9 @@
                   >
                     <span class="material-icons">visibility</span>
                   </button>
+                  <button class="btn btn-sm btn-danger" (click)="eliminarSancion(sancion.id_sancion)" title="Eliminar">
+                        <i class="bi bi-trash"></i>
+                      </button>
                 </div>
               </td>
             </tr>
@@ -118,7 +123,7 @@
                   <option value="" disabled selected>
                     Seleccionar trabajador
                   </option>
-                  <option *ngFor="let trabajador of trabajadores" [value]="trabajador.id_trabajador">
+                  <option *ngFor="let trabajador of trabajadores" [ngValue]="trabajador.id_trabajador">
                     {{ trabajador.nombre }} {{ trabajador.apellido_paterno }} {{ trabajador.apellido_materno }}
                   </option>
                 </select>

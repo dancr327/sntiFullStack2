@@ -96,6 +96,28 @@
     </div>
   </div>
 
+  <div class="card mt-3">
+    <div class="card-header bg-light-blue text-white">
+      <h5 class="mb-0">Sanciones con fecha vencida</h5>
+    </div>
+    <div class="card-body p-0">
+      <ul class="list-group list-group-flush">
+        <li class="list-group-item" *ngFor="let s of sancionesVencidas">
+          <div class="d-flex justify-content-between">
+            <span>
+              {{ s.trabajadores.nombre }} {{ s.trabajadores.apellido_paterno }} {{ s.trabajadores.apellido_materno }} -
+              {{ s.tipo_sancion }}
+            </span>
+            <small>{{ s.fecha_fin | date : 'dd/MM/yyyy' }}</small>
+          </div>
+        </li>
+        <li class="list-group-item text-center" *ngIf="sancionesVencidas.length === 0">
+          No hay sanciones vencidas
+        </li>
+      </ul>
+    </div>
+  </div>
+
   <!-- MODAL: Nueva Sanción -->
   <div class="modal fade" id="sancionModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg">
@@ -148,6 +170,7 @@
                   class="form-control"
                   [(ngModel)]="nuevaSancion.fecha_aplicacion"
                   name="fecha_aplicacion"
+                  [min]="minFechaAplicacion"
                   required
                 />
               </div>
@@ -158,7 +181,11 @@
                   class="form-control"
                   [(ngModel)]="nuevaSancion.fecha_fin"
                   name="fecha_fin"
+                  [min]="nuevaSancion.fecha_aplicacion"
                 />
+                <div class="text-danger small" *ngIf="fechaFinInvalida">
+                  La fecha de finalización no puede ser anterior a la fecha de aplicación.
+                </div>
               </div>
             </div>
             <div class="mb-3">
@@ -191,10 +218,10 @@
                 data-bs-dismiss="modal"
               >Cancelar</button>
               <button
-                type="submit"
-                class="btn btn-light-blue"
-                [disabled]="!sancionForm.valid"
-              >
+                  type="submit"
+                  class="btn btn-light-blue"
+                  [disabled]="!sancionForm.valid || fechaFinInvalida"
+                >
                 <i class="bi bi-save me-2"></i>Guardar Sanción
               </button>
             </div>

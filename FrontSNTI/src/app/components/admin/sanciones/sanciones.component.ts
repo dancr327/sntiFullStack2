@@ -24,6 +24,7 @@ export class SancionesComponent implements OnInit {
   filtroBusqueda: string = '';
   sanciones: Sancion[] = [];
   sancionesFiltradas: Sancion[] = [];
+  sancionesVencidas: Sancion[] = [];
   trabajadores: Trabajador[] = [];
   sancionSeleccionada: Sancion | null = null;
 
@@ -77,10 +78,15 @@ export class SancionesComponent implements OnInit {
       next: (resp) => {
         this.sanciones = resp.data || [];
         this.sancionesFiltradas = [...this.sanciones];
+        const hoy = new Date();
+        this.sancionesVencidas = this.sanciones.filter(
+          (s) => s.fecha_fin && new Date(s.fecha_fin) < hoy
+        );
       },
       error: () => {
         this.sanciones = [];
         this.sancionesFiltradas = [];
+        this.sancionesVencidas = [];
       }
     });
   }
@@ -112,8 +118,10 @@ export class SancionesComponent implements OnInit {
 
   eliminarSancion(id: number): void {
     if (confirm('¿Está seguro de eliminar esta sanción?')) {
-      this.sanciones = this.sanciones.filter((s) => s.id_sancion !== id);
-      this.sancionesFiltradas = [...this.sanciones];
+      this.sancionesService.eliminarSancion(id).subscribe({
+        next: () => this.cargarSanciones(),
+        error: (err) => console.error(err)
+      });
     }
   }
 

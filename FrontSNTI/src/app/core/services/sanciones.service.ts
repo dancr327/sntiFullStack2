@@ -24,4 +24,8 @@ export class SancionesService {
   getMisSanciones(): Observable<{ success: boolean; data: Sancion[] }> {
     return this.http.get<{ success: boolean; data: Sancion[] }>(`${this.apiUrl}/mi-sancion`);
   }
+
+  eliminarSancion(id: number) {
+    return this.http.delete(`${this.apiUrl}/${id}`);
+  }
 }

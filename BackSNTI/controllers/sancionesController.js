@@ -211,10 +211,39 @@ const miSancion = async (req, res) => {
     }
 };
 
+/**
+ * @function eliminarSancion
+ * @description Elimina una sanción existente por su ID. Solo accesible para ADMINISTRADORES.
+ * @param {object} req - Objeto de solicitud de Express (req.params.id).
+ * @param {object} res - Objeto de respuesta de Express.
+ */
+const eliminarSancion = async (req, res) => {
+    try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ success: false, message: 'Error de validación', errors: errors.array() });
+        }
+
+        const id = parseInt(req.params.id);
+        const sancion = await prisma.sanciones.findUnique({ where: { id_sancion: id } });
+
+        if (!sancion) {
+            return res.status(404).json({ success: false, message: 'Sanción no encontrada.' });
+        }
+
+        await prisma.sanciones.delete({ where: { id_sancion: id } });
+        return res.status(200).json({ success: true, message: 'Sanción eliminada exitosamente.' });
+    } catch (error) {
+        console.error('Error al eliminar la sanción:', error);
+        return res.status(500).json({ success: false, message: 'Error del servidor.', error: error.message });
+    }
+};
+
 module.exports = {
     validarSancion,
     crearSancion,
     listarSanciones,
     obtenerSancionesPorTrabajador,
-    miSancion
+    miSancion,
+    eliminarSancion
 };

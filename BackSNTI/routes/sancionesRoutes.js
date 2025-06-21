@@ -7,7 +7,8 @@ const {
     crearSancion,
     listarSanciones,
     obtenerSancionesPorTrabajador,
-    miSancion
+    miSancion,
+    eliminarSancion
 } = require("../controllers/sancionesController");
 const { verifyToken } = require("../middleware/auth");
 const { hasRole } = require("../middleware/authorization");
@@ -374,6 +375,18 @@ router.get(
     verifyToken,
     hasRole([Roles.ADMINISTRADOR, Roles.USUARIO]),
     miSancion
+);
+
+router.delete(
+    "/:id",
+    verifyToken,
+    hasRole([Roles.ADMINISTRADOR]),
+    [
+        param('id')
+            .isInt().withMessage('ID debe ser entero')
+            .toInt()
+    ],
+    eliminarSancion
 );
 
 module.exports = router;

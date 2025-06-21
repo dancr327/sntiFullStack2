@@ -16,7 +16,7 @@ import { Usuario } from '../../../core/models/usuario.model';
 @Component({
   selector: 'app-sanciones',
   standalone: true,
-  imports: [MatIconModule, RouterLink, AdminbarraComponent, CommonModule, FormsModule],
+  imports: [MatIconModule, CommonModule, FormsModule],
   templateUrl: './sanciones.component.html',
   styleUrl: './sanciones.component.css'
 })

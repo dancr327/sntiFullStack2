@@ -400,66 +400,64 @@ const eliminarPermiso = async (req, res) => {
  * @param {object} res - Objeto de respuesta de Express.
  */
 const descargarDocumentoPermiso = async (req, res) => {
-    try {
-        const documentoId = parseInt(req.params.documentoId);
-        const userId = req.user.id;
-        const userRole = req.user.role;
-
-        if (isNaN(documentoId)) {
-            return res.status(400).json({ success: false, message: 'ID de documento inválido.' });
-        }
-
-        const documento = await prisma.documentos.findUnique({
-            where: { id_documento: documentoId },
-            select: {
-                id_documento: true,
-                nombre_archivo: true,
-                ruta_almacenamiento: true,
-                id_trabajador: true, // Necesario para la autorización
-                mimetype: true,
-                tamano_bytes: true
-            }
-        });
-
-        if (!documento) {
-            return res.status(404).json({ success: false, message: 'Documento no encontrado.' });
-        }
-
-        // Regla de autorización: ADMIN puede descargar cualquier documento, USUARIO solo los suyos.
-        if (userRole !== Roles.ADMINISTRADOR && documento.id_trabajador !== userId) {
-            return res.status(403).json({ success: false, message: 'Acceso denegado. No tiene permisos para descargar este documento.' });
-        }
-
-        const filePath = path.join(__dirname, '..', documento.ruta_almacenamiento);
-
-        // Verificar que el archivo realmente existe en el sistema de archivos
-        try {
-            await stat(filePath); // Intenta obtener el estado del archivo
-        } catch (fileError) {
-            console.error(`Error al acceder al archivo físico: ${filePath}`, fileError);
-            return res.status(404).json({ success: false, message: 'Archivo físico no encontrado en el servidor.' });
-        }
-
-        // Establecer las cabeceras para la descarga
-        res.setHeader('Content-Type', documento.mimetype || 'application/octet-stream');
-        res.setHeader('Content-Disposition', `attachment; filename="${documento.nombre_archivo}"`);
-        res.setHeader('Content-Length', documento.tamano_bytes); // Opcional, pero bueno para el cliente
-
-        // Enviar el archivo
-        res.download(filePath, (err) => {
-            if (err) {
-                console.error('Error al descargar el archivo:', err);
-                // Si la descarga falló por un problema de stream, no es un error de "no encontrado"
-                if (!res.headersSent) { // Solo si no hemos enviado ya una respuesta
-                    return res.status(500).json({ success: false, message: 'Error al procesar la descarga del archivo.' });
-                }
-            }
-        });
-
-    } catch (error) {
-        console.error('Error en descargarDocumentoPermiso:', error);
-        return res.status(500).json({ success: false, message: 'Error del servidor.', error: error.message });
+  try {
+    const documentoId = parseInt(req.params.id_documento, 10);
+    if (isNaN(documentoId)) {
+      return res.status(400).json({ success: false, message: 'ID de documento inválido.' });
     }
+
+    // 1. Busca el documento
+    const doc = await prisma.documentos.findUnique({
+      where: { id_documento: documentoId },
+      select: {
+        id_documento: true,
+        nombre_archivo: true,
+        ruta_almacenamiento: true,
+        mimetype: true,
+        tamano_bytes: true
+      }
+    });
+
+    if (!doc) {
+      return res.status(404).json({ success: false, message: 'Documento no encontrado en la base de datos.' });
+    }
+
+    // 2. Normaliza la ruta
+    // Elimina 'uploads\' si ya viene incluida (solo quédate con 'curp/archivo.pdf')
+    let rutaAlmacenamiento = doc.ruta_almacenamiento.replace(/\\/g, '/');
+    if (rutaAlmacenamiento.startsWith('uploads/')) {
+      rutaAlmacenamiento = rutaAlmacenamiento.replace(/^uploads\//, '');
+    }
+
+    // 3. Construye la ruta absoluta
+    const filePath = path.join(__dirname, '..', 'uploads', rutaAlmacenamiento);
+
+    // 4. Verifica existencia
+    try {
+      await stat(filePath);
+    } catch (fileError) {
+      console.error(`Error al acceder al archivo físico: ${filePath}`, fileError);
+      return res.status(404).json({ success: false, message: 'Archivo físico no encontrado en el servidor.' });
+    }
+
+    // 5. Descarga usando Express
+    res.setHeader('Content-Type', doc.mimetype || 'application/octet-stream');
+    res.setHeader('Content-Disposition', `attachment; filename="${doc.nombre_archivo}"`);
+    res.setHeader('Content-Length', doc.tamano_bytes);
+
+    return res.download(filePath, (err) => {
+      if (err) {
+        console.error('Error al descargar el archivo:', err);
+        if (!res.headersSent) {
+          return res.status(500).json({ success: false, message: 'Error al procesar la descarga del archivo.' });
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error('Error en descargarDocumento:', error);
+    return res.status(500).json({ success: false, message: 'Error del servidor.', error: error.message });
+  }
 };
 module.exports = {
     validarPermiso,

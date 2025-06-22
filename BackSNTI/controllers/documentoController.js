@@ -1,363 +1,224 @@
-// file: controllers/documentoController.js
 const { PrismaClient } = require("@prisma/client");
-const crypto = require("crypto");
 const path = require("path");
-const fsSync = require("node:fs"); // Necesario para verificar si existe el directorio
-const { MAPEO_TIPOS_DOCUMENTOS } = require("../config/multerConfig");
-const { v4: uuidv4 } = require("uuid"); // Importa uuid para nombres de archivo únicos
+const fs = require("fs").promises;
+const crypto = require("crypto");
+const TipoDocumento = require("../enums/tipodocumento.enum");
+
 const prisma = new PrismaClient();
 
-const fs = require("fs"); // Importar el módulo fs estándar
-const { promises: fsPromises } = require("fs"); // Si aún necesitas las promesas en otras partes
+const TIPOS_PERMITIDOS_PANEL = [
+  TipoDocumento.CURP,
+  TipoDocumento.RFC,
+  TipoDocumento.INE,
+  TipoDocumento.CERTIFICADO_ESTUDIO,
+  TipoDocumento.OTRO_DOCUMENTO
+];
 
+// Normaliza ruta a formato curp/archivo.pdf, nunca con uploads/ y siempre con /
+function normalizeUploadPath(rawPath) {
+  let ruta = rawPath.replace(/\\/g, '/');
+  if (ruta.startsWith('uploads/')) ruta = ruta.substring(8);
+  return ruta;
+}
 
-/**
- * Controlador para subir un documento al sistema
- * @param {Object} req - Objeto de solicitud Express
- * @param {Object} res - Objeto de respuesta Express
- * @returns {Object} Respuesta JSON con resultado de la operación
- */
+// Construye la ruta absoluta al archivo físico
+function buildAbsolutePath(rutaAlmacenamiento) {
+  const rutaRelativa = normalizeUploadPath(rutaAlmacenamiento);
+  return path.join(__dirname, '..', 'uploads', rutaRelativa);
+}
+
+// SUBIR DOCUMENTO PANEL
 const subirDocumento = async (req, res) => {
-  let rutaTemporal = null;
-  let rutaFinal = null;
-
   try {
-    // Verificar que se haya subido un archivo
     if (!req.file) {
-      return res.status(400).json({
-        success: false,
-        message: 'No se proporcionó ningún archivo.',
-      });
+      return res.status(400).json({ success: false, message: "Archivo no enviado" });
     }
-
-    // Guardar referencia al archivo temporal
-    rutaTemporal = req.file.path;
-
-    // Extraer datos del body
     const { id_trabajador, tipo_documento, descripcion } = req.body;
-    
-    // Validar datos obligatorios
+
     if (!id_trabajador || !tipo_documento) {
-      return res.status(400).json({
+      await fs.unlink(req.file.path);
+      return res.status(400).json({ success: false, message: "Faltan datos obligatorios" });
+    }
+    if (!TIPOS_PERMITIDOS_PANEL.includes(tipo_documento)) {
+      await fs.unlink(req.file.path);
+      return res.status(400).json({ success: false, message: "Tipo de documento no permitido en el panel" });
+    }
+    const existente = await prisma.documentos.findFirst({
+      where: {
+        id_trabajador: parseInt(id_trabajador),
+        tipo_documento
+      }
+    });
+    if (existente) {
+      await fs.unlink(req.file.path);
+      return res.status(409).json({
         success: false,
-        message: 'Se requieren id_trabajador y tipo_documento',
+        message: `Ya existe un documento de tipo ${tipo_documento} para este trabajador.`
       });
     }
 
-    // Convertir es_publico a booleano
-    const es_publico = req.body.es_publico === 'true' || req.body.es_publico === true;
-    
-    // Extraer información del archivo
-    const { originalname, mimetype, size } = req.file;
+    // Guarda SOLO la ruta relativa al directorio uploads (ej: curp/archivo.pdf)
+    const rutaRelativa = path.relative(
+      path.join(__dirname, '..', 'uploads'),
+      req.file.path
+    ).replace(/\\/g, '/');
 
-    // No necesitamos generar un nuevo nombre de archivo ya que Multer ya lo hace
-    // El archivo ya está en la carpeta correcta según su tipo_documento
-    
-    // Guardar la ruta donde el archivo fue almacenado por Multer
-    const rutaAlmacenamiento = path.relative(path.join(__dirname, '../uploads'), rutaTemporal);
-    
-    // La ruta absoluta es la misma que la temporal en este caso
-    rutaFinal = rutaTemporal;
-
-    // Calcular el hash SHA-256 del archivo para verificación e integridad
-    const fileBuffer = fs.readFileSync(rutaFinal);
+    const tipoArchivo = req.file.mimetype.split('/')[1];
+    const fileBuffer = await fs.readFile(req.file.path);
     const hashArchivo = crypto.createHash('sha256').update(fileBuffer).digest('hex');
-
-    // Extraer el tipo de archivo desde el MIME
-    const tipoArchivo = mimetype.split('/')[1];
-
-    // Crear metadata estructurada del archivo
     const metadata = JSON.stringify({
-      mime_type: mimetype,
-      original_name: originalname,
+      mime_type: req.file.mimetype,
+      original_name: req.file.originalname,
       upload_date: new Date().toISOString(),
-      file_size_bytes: size,
+      file_size_bytes: req.file.size
     });
 
-    try {
-      // Ejecutar el procedimiento almacenado con Prisma
-      await prisma.$executeRaw`
-        SELECT public.sp_subir_documento(
-          ${parseInt(id_trabajador, 10)}::INTEGER,
-          ${tipo_documento}::VARCHAR,
-          ${metadata}::JSONB,
-          ${hashArchivo}::VARCHAR,
-          ${originalname}::VARCHAR,
-          ${descripcion || null}::TEXT,
-          ${tipoArchivo}::VARCHAR,
-          ${rutaAlmacenamiento}::TEXT,
-          ${size}::BIGINT,
-          ${es_publico}::BOOLEAN
-        );
-      `;
-    } catch (dbError) {
-      console.error('Error al ejecutar procedimiento almacenado:', dbError);
-      
-      // Si falla la operación en la base de datos, eliminar el archivo
-      if (rutaFinal) {
-        fs.unlinkSync(rutaFinal);
-      }
-      
-      return res.status(500).json({
-        success: false,
-        message: 'Error al registrar el documento en la base de datos',
-        error: dbError.message,
-      });
-    }
-
-    // Verificar que el documento fue registrado correctamente
-    const documentoSubido = await prisma.documentos.findFirst({
-      where: {
+    const nuevoDoc = await prisma.documentos.create({
+      data: {
+        id_trabajador: parseInt(id_trabajador),
+        tipo_documento,
+        metadata,
         hash_archivo: hashArchivo,
-        id_trabajador: parseInt(id_trabajador, 10),
+        nombre_archivo: req.file.originalname,
+        descripcion: descripcion || null,
+        tipo_archivo: tipoArchivo,
+        ruta_almacenamiento: rutaRelativa, // RUTA RELATIVA LIMPIA
+        tamano_bytes: req.file.size,
+        es_publico: true,
+        mimetype: req.file.mimetype
       },
       select: {
         id_documento: true,
+        tipo_documento: true,
         nombre_archivo: true,
         ruta_almacenamiento: true,
-        tipo_documento: true,
-        fecha_subida: true,
-      },
+        fecha_subida: true
+      }
     });
 
-    if (!documentoSubido) {
-      // Si no se encuentra el documento, eliminar el archivo
-      if (rutaFinal) {
-        fs.unlinkSync(rutaFinal);
-      }
-      
-      return res.status(500).json({
-        success: false,
-        message: 'El documento se procesó pero no se encontró en la base de datos',
-      });
-    }
-
-    // Responder al cliente con éxito
     return res.status(201).json({
       success: true,
       message: 'Documento subido exitosamente',
-      data: documentoSubido,
+      data: nuevoDoc
     });
 
   } catch (error) {
-    console.error('Error general en subirDocumento:', error);
-
-    // Limpiar archivos temporales o creados en caso de error
-    try {
-      if (rutaTemporal && fs.existsSync(rutaTemporal)) {
-        fs.unlinkSync(rutaTemporal);
-      }
-      if (rutaFinal && rutaFinal !== rutaTemporal && fs.existsSync(rutaFinal)) {
-        fs.unlinkSync(rutaFinal);
-      }
-    } catch (cleanupError) {
-      console.error('Error durante limpieza de archivos:', cleanupError);
+    console.error('Error al subir documento:', error);
+    if (req.file?.path) {
+      try { await fs.unlink(req.file.path); } catch { }
     }
-
-    return res.status(500).json({
-      success: false,
-      message: 'Error al procesar la solicitud',
-      error: error.message,
-    });
-  }
-};
-/**
- * Obtiene un documento por su ID
- * @param {Object} req - Objeto de solicitud Express
- * @param {Object} res - Objeto de respuesta Express
- * @returns {Object} Respuesta JSON con el documento o mensaje de error
- */
-const obtenerDocumento = async (req, res) => {
-  try {
-    const { id } = req.params;
-    
-    if (!id || isNaN(parseInt(id, 10))) {
-      return res.status(400).json({
-        success: false,
-        message: 'ID de documento inválido',
-      });
-    }
-
-    const documento = await prisma.documentos.findUnique({
-      where: { id_documento: parseInt(id, 10) },
-      select: {
-        id_documento: true,
-        id_trabajador: true,
-        nombre_archivo: true,
-        tipo_documento: true,
-        descripcion: true,
-        fecha_subida: true,
-        es_publico: true,
-        ruta_almacenamiento: true,
-      },
-    });
-
-    if (!documento) {
-      return res.status(404).json({
-        success: false,
-        message: 'Documento no encontrado',
-      });
-    }
-
-    return res.status(200).json({
-      success: true,
-      data: documento,
-    });
-  } catch (error) {
-    console.error('Error al obtener documento:', error);
-    return res.status(500).json({
-      success: false,
-      message: 'Error al obtener el documento',
-      error: error.message,
-    });
+    return res.status(500).json({ success: false, message: 'Error en servidor', error: error.message });
   }
 };
 
-/**
- * Obtiene los documentos asociados a un trabajador
- * @param {Object} req - Objeto de solicitud Express
- * @param {Object} res - Objeto de respuesta Express
- * @returns {Object} Respuesta JSON con los documentos del trabajador
- */
-const obtenerDocumentosPorTrabajador = async (req, res) => {
+// OBTENER DOCUMENTO POR TIPO
+const obtenerDocumentoPorTipo = async (req, res) => {
   try {
-    const { id_trabajador } = req.params;
-
-    // Verificar que el trabajador existe
-    const trabajador = await prisma.trabajadores.findUnique({
-      where: { id_trabajador: parseInt(id_trabajador) },
-    });
-
-    if (!trabajador) {
-      return res.status(404).json({
-        success: false,
-        message: "Trabajador no encontrado",
-      });
-    }
-
-    // Obtener documentos asociados al trabajador
-    const documentos = await prisma.documentos.findMany({
+    const { id_trabajador, tipo_documento } = req.params;
+    const doc = await prisma.documentos.findFirst({
       where: {
         id_trabajador: parseInt(id_trabajador),
-        es_publico: true, // Usar es_publico en lugar de activo
+        tipo_documento
       },
       select: {
         id_documento: true,
         tipo_documento: true,
         nombre_archivo: true,
         descripcion: true,
-        fecha_subida: true,
-        es_publico: true,
         ruta_almacenamiento: true,
-      },
-      orderBy: {
-        fecha_subida: "desc",
-      },
+        fecha_subida: true
+      }
     });
-
-    return res.status(200).json({
-      success: true,
-      data: documentos,
-    });
+    if (!doc) {
+      return res.status(404).json({ success: false, message: 'Documento no encontrado' });
+    }
+    return res.status(200).json({ success: true, data: doc });
   } catch (error) {
-    console.error("Error al obtener documentos:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Error al recuperar documentos",
-      error: error.message,
-    });
+    console.error('Error al obtener documento:', error);
+    return res.status(500).json({ success: false, message: 'Error en servidor', error: error.message });
   }
 };
 
-const descargarDocumento = async (req, res) => {
-  const { id_documento } = req.params;
-
+// ELIMINAR DOCUMENTO POR TIPO
+const eliminarDocumentoPorTipo = async (req, res) => {
   try {
-    // Llamar a la función de PostgreSQL para obtener la ruta del archivo
-    const result =
-      await prisma.$queryRaw`SELECT public.sp_descargar_documento(${parseInt(
-        id_documento
-      )}::INTEGER) as ruta;`;
-    const rutaAlmacenamiento = result[0]?.ruta;
-
-    if (!rutaAlmacenamiento) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Documento no encontrado." });
-    }
-
-    const rutaAbsoluta = path.join(
-      __dirname,
-      "../../uploads",
-      rutaAlmacenamiento
-    );
-
-    // Verificar si el archivo existe en el sistema de archivos
-    if (!fs.existsSync(rutaAbsoluta)) {
-      // Usar fs.existsSync
-      console.error(`Archivo no encontrado en la ruta: ${rutaAbsoluta}`);
-      return res
-        .status(404)
-        .json({
-          success: false,
-          message: "El archivo asociado no se encontró en el servidor.",
-        });
-    }
-
-    // Obtener información del tipo de archivo desde la base de datos (para el Content-Type)
-    const documentoInfo = await prisma.documentos.findUnique({
-      where: { id_documento: parseInt(id_documento) },
-      select: { nombre_archivo: true, tipo_archivo: true, mimetype: true },
+    const { id_trabajador, tipo_documento } = req.params;
+    const doc = await prisma.documentos.findFirst({
+      where: {
+        id_trabajador: parseInt(id_trabajador),
+        tipo_documento
+      }
     });
-
-    if (!documentoInfo) {
-      return res
-        .status(404)
-        .json({
-          success: false,
-          message: "Información del documento no encontrada.",
-        });
+    if (!doc) {
+      return res.status(404).json({ success: false, message: 'Documento no encontrado' });
     }
-
-    const nombreArchivo = documentoInfo.nombre_archivo;
-    const mimeType =
-      documentoInfo.mimetype ||
-      `application/${documentoInfo.tipo_archivo || "octet-stream"}`;
-
-    // Configurar los encabezados para la descarga
-    res.setHeader(
-      "Content-Disposition",
-      `attachment; filename="${nombreArchivo}"`
-    );
-    res.setHeader("Content-Type", mimeType);
-
-    // Crear un stream de lectura del archivo y pipearlo a la respuesta
-    const fileStream = fs.createReadStream(rutaAbsoluta);
-    fileStream.pipe(res);
-
-    fileStream.on("error", (err) => {
-      console.error("Error al leer el archivo:", err);
-      res
-        .status(500)
-        .json({
-          success: false,
-          message: "Error al leer el archivo del servidor.",
-        });
-    });
+    const rutaAbsoluta = buildAbsolutePath(doc.ruta_almacenamiento);
+    try {
+      await fs.unlink(rutaAbsoluta);
+    } catch (e) {
+      // Si el archivo no existe, no es fatal
+      console.warn(`No se pudo borrar el archivo físico (${rutaAbsoluta}):`, e.message);
+    }
+    await prisma.documentos.delete({ where: { id_documento: doc.id_documento } });
+    return res.status(200).json({ success: true, message: 'Documento eliminado' });
   } catch (error) {
-    console.error("Error al descargar el documento:", error);
-    return res
-      .status(500)
-      .json({
-        success: false,
-        message: "Error al procesar la descarga del documento.",
-        error: error.message,
-      });
+    console.error('Error al eliminar documento:', error);
+    return res.status(500).json({ success: false, message: 'Error en servidor', error: error.message });
   }
 };
+
+// DESCARGAR DOCUMENTO PANEL
+const descargarDocumento = async (req, res) => {
+  try {
+    const documentoId = parseInt(req.params.id_documento, 10);
+    if (isNaN(documentoId)) {
+      return res.status(400).json({ success: false, message: 'ID de documento inválido.' });
+    }
+    const doc = await prisma.documentos.findUnique({
+      where: { id_documento: documentoId }
+    });
+
+    if (!doc) {
+      return res.status(404).json({ success: false, message: 'Documento no encontrado en la base de datos.' });
+    }
+
+    // Siempre trabaja solo con la ruta relativa, NO debe tener uploads/
+    const rutaRelativa = doc.ruta_almacenamiento.replace(/\\/g, '/').replace(/^uploads\//, '');
+    const filePath = path.join(__dirname, '..', 'uploads', rutaRelativa);
+
+    console.log('DEBUG: Buscando archivo en:', filePath);
+
+    try {
+      await fs.stat(filePath);
+      console.log('DEBUG: Archivo encontrado:', filePath);
+    } catch {
+      console.log('DEBUG: Archivo no existe:', filePath);
+      return res.status(404).json({ success: false, message: 'Archivo físico no encontrado en el servidor.' });
+    }
+
+    res.setHeader('Content-Type', doc.mimetype || 'application/octet-stream');
+    res.setHeader('Content-Disposition', `attachment; filename="${doc.nombre_archivo}"`);
+    res.setHeader('Content-Length', doc.tamano_bytes);
+
+    return res.download(filePath, (err) => {
+      if (err) {
+        console.error('Error al descargar el archivo:', err);
+        if (!res.headersSent) {
+          return res.status(500).json({ success: false, message: 'Error al procesar la descarga del archivo.' });
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Error en descargarDocumento:', error);
+    return res.status(500).json({ success: false, message: 'Error del servidor.', error: error.message });
+  }
+};
+
+
 
 module.exports = {
   subirDocumento,
-  obtenerDocumentosPorTrabajador,
-  descargarDocumento,
+  obtenerDocumentoPorTipo,
+  eliminarDocumentoPorTipo,
+  descargarDocumento
 };

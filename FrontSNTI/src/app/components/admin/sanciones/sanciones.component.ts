@@ -1,7 +1,5 @@
 import { Component, OnInit } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
-import { RouterLink } from '@angular/router';
-import { AdminbarraComponent } from '../adminbarra/adminbarra.component';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 

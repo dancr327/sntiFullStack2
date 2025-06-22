@@ -2,6 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
+const Roles = require('../enums/roles.enum'); // Agrega esto arriba
 const { authMiddleware, authorizationMiddleware } = require('../middleware');
 
 // Importa los enrutadores de las diferentes rutas
@@ -12,6 +13,7 @@ const documentoRoutes = require('./documentoRoutes');
 const hijosRoutes = require('./hijosRoutes');
 const permisosRoutes = require('./permisosRoutes'); 
 const sancionesRoutes = require('./sancionesRoutes'); 
+const contactosRoutes = require('./contactosRoutes'); 
 
 
 
@@ -28,6 +30,7 @@ router.use('/documentos', authMiddleware.verifyToken, authorizationMiddleware.ha
 router.use('/hijos', authMiddleware.verifyToken, hijosRoutes);
 router.use('/permisos', authMiddleware.verifyToken, authorizationMiddleware.hasRole, permisosRoutes); // Si tienes un enrutador de permisos
 router.use('/sanciones', authMiddleware.verifyToken, authorizationMiddleware.hasRole, sancionesRoutes); // Si tienes un enrutador de sanciones
+router.use('/contactos', authMiddleware.verifyToken, authorizationMiddleware.hasRole([Roles.ADMINISTRADOR]), contactosRoutes);
 
 // Las rutas de autenticación (login, test-token, etc.) NO llevan authMiddleware.verifyToken globalmente aquí.
 // Si alguna ruta dentro de authRoutes (como /auth/verify o /auth/logout) necesita token,

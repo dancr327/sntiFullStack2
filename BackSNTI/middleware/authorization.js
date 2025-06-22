@@ -9,6 +9,8 @@ const roles = rol_usuario;
 
 
   if (!Array.isArray(allowedRoles)) {
+    console.trace('TRACE: allowedRoles no es un array');
+    console.error('ERROR: allowedRoles no es un array, su valor es:', allowedRoles);
     throw new Error('Los roles deben ser un array');
   }
 

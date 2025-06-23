@@ -18,6 +18,9 @@ const authRoutes = require('./routes/authRoutes'); // Ajusta la ruta si es neces
 const sancionesRoutes = require('./routes/sancionesRoutes'); // Ajusta la ruta si es necesario
 const permisosRoutes = require('./routes/permisosRoutes'); // Ajusta la ruta si es necesario
 const contactosRoutes = require('./routes/contactosRoutes'); 
+const cursosRoutes = require('./routes/cursosRoutes'); // Ajusta la ruta si es necesarioAdd commentMore actions
+const trabajadoresCursosRoutes = require('./routes/trabajadoresCursosRoutes'); // Ajusta la ruta si es necesario
+const galeriaRoutes = require('./routes/galeriaRoutes'); // Ajusta la ruta si es necesario
 
 
 const trabajadorRoutes = require('./routes/trabajadorRoutes'); // Ajusta la ruta si es necesario
@@ -83,6 +86,9 @@ app.use('/auth', authRoutes); // Monta el enrutador con el prefijo /api/auth
 app.use('/sanciones', sancionesRoutes); // Monta el enrutador con el prefijo /api/sanciones
 app.use('/permisos', permisosRoutes); // Monta el enrutador con el prefijo /api/permisos
 app.use ('/contactos', contactosRoutes); // Monta el enrutador con el prefijo /api/contactos
+app.use('/galeria', galeriaRoutes); // Monta el enrutador con el prefijo /api/galeria
+app.use('/trabajadores-cursos', trabajadoresCursosRoutes); // Monta el enrutador con el prefijo /api/trabajadores-cursosAdd commentMore actions
+app.use('/cursos', cursosRoutes); // Monta el enrutador con el prefijo /api/cursos
 
 // Ruta base (opcional, si es necesario)
 app.get('/', (req, res) => {

@@ -9,5 +9,7 @@ module.exports = {
   verifyToken: auth.verifyToken,
   authorizationMiddleware: authorization,
   errorHandler,
- multerHandler
+ multerHandler,
+   handleMulterUpload: multerHandler.handleMulterUpload // <-- AÑADE ESTO
+
 };

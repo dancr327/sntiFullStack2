@@ -9,6 +9,9 @@ import authController from './authController'; // Ajusta la ruta si es necesario
 import { permisosController } from './permisosController'; // Ajusta la ruta si es necesario
 import {sancionesController} from './sancionesController'; // Ajusta la ruta si es necesario
 import {contactosController} from './contactosController'; // Ajusta la ruta si es necesario
+import { galeriaController}  from './galeriaController'; // Ajusta la ruta si es necesario
+import {cursosController} from './cursosController'; // Ajusta la ruta si es necesario
+import {trabajadoresCursosController} from './trabajadoresCursosController'; // Ajusta la ruta si es necesario
 
 
 module.exports = {
@@ -20,6 +23,9 @@ module.exports = {
   authController,
   permisosController,
   sancionesController,
-  contactosController
+  contactosController,
+  galeriaController,
+  cursosController,
+  trabajadoresCursosController
   
 };

@@ -401,7 +401,7 @@ const eliminarPermiso = async (req, res) => {
  */
 const descargarDocumentoPermiso = async (req, res) => {
   try {
-    const documentoId = parseInt(req.params.id_documento, 10);
+    const documentoId = parseInt(req.params.documentoId, 10);
     if (isNaN(documentoId)) {
       return res.status(400).json({ success: false, message: 'ID de documento inválido.' });
     }

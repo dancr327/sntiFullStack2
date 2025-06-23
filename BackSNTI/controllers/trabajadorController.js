@@ -46,7 +46,10 @@ const validarTrabajador = [
     body('nombre_puesto').optional().isLength({ max: 100 }).withMessage('El nombre del puesto no puede exceder 100 caracteres.'),
     body('puesto_inpi').optional().isLength({ max: 100 }).withMessage('El puesto INPI no puede exceder 100 caracteres.'),
     body('adscripcion').optional().isLength({ max: 100 }).withMessage('La adscripción no puede exceder 100 caracteres.'),
-    body('id_seccion').optional().isInt().withMessage('ID de sección inválido. Debe ser un número entero.'),
+    body('id_seccion')
+        .optional()
+        .isInt().withMessage('ID de sección inválido. Debe ser un número entero.')
+        .toInt(), // Convierte a entero, ajuste hecho para que se pueda usar en el formulario
     body('nivel_estudios').optional().isLength({ max: 100 }).withMessage('El nivel de estudios no puede exceder 100 caracteres.'),
     body('institucion_estudios').optional().isLength({ max: 200 }).withMessage('La institución de estudios no puede exceder 200 caracteres.'),
     body('certificado_estudios').optional().isBoolean().withMessage('Valor de certificado inválido. Debe ser true o false.'),
@@ -72,7 +75,10 @@ const validarCreacionTrabajador = [
     body('nivel_puesto').notEmpty().withMessage('El nivel de puesto es obligatorio.'),
     body('nombre_puesto').notEmpty().withMessage('El nombre del puesto es obligatorio.'),
     body('adscripcion').notEmpty().withMessage('La adscripción es obligatoria.'),
-    body('id_seccion').notEmpty().withMessage('La sección es obligatoria.').isInt().withMessage('ID de sección inválido.'),
+    body('id_seccion')
+        .notEmpty().withMessage('La sección es obligatoria.')
+        .isInt().withMessage('ID de sección inválido.')
+        .toInt(), // Convierte a entero, ajuste hecho para que se pueda usar en el formulario
     ...validarTrabajador // Combina con las validaciones de formato de los campos ya definidos
 ];
 
@@ -203,6 +209,8 @@ const crearTrabajador = async (req, res) => {
             plaza_base
         } = req.body;
 
+        const idSeccionInt = parseInt(id_seccion, 10); // Asegurarse de que id_seccion sea un entero
+
         // Verificar duplicados antes de la creación
         const camposDuplicados = await verificarDuplicados({
             identificador, curp, rfc, email, numero_empleado, numero_plaza
@@ -254,7 +262,7 @@ const crearTrabajador = async (req, res) => {
                 // Conectar con la sección existente
                 seccion: {
                     connect: {
-                        id_seccion: id_seccion
+                         id_seccion: idSeccionInt
                     }
                 },
                 nivel_estudios,
@@ -511,9 +519,10 @@ const actualizarTrabajador = async (req, res) => {
         if (puesto_inpi !== undefined) dataToUpdate.puesto_inpi = puesto_inpi;
         if (adscripcion !== undefined) dataToUpdate.adscripcion = adscripcion;
         if (id_seccion !== undefined) {
+            const idSeccionIntUpdate = parseInt(id_seccion, 10);
             dataToUpdate.seccion = {
                 connect: {
-                    id_seccion: id_seccion
+                    id_seccion: idSeccionIntUpdate
                 }
             };
         }

@@ -30,7 +30,7 @@ router.use('/documentos', authMiddleware.verifyToken, authorizationMiddleware.ha
 router.use('/hijos', authMiddleware.verifyToken, hijosRoutes);
 router.use('/permisos', authMiddleware.verifyToken, authorizationMiddleware.hasRole([Roles.USUARIO, Roles.ADMINISTRADOR]), permisosRoutes);
 router.use('/sanciones', authMiddleware.verifyToken, authorizationMiddleware.hasRole([Roles.USUARIO, Roles.ADMINISTRADOR]), sancionesRoutes);
-router.use('/contactos', authMiddleware.verifyToken, authorizationMiddleware.hasRole([Roles.ADMINISTRADOR]), contactosRoutes);
+router.use('/contactos', contactosRoutes);
 router.use ('/galeria', authMiddleware.verifyToken, authorizationMiddleware.hasRole([Roles.USUARIO, Roles.ADMINISTRADOR]),galeriaRoutes);
 router.use('/hijos', authMiddleware.verifyToken, authorizationMiddleware.hasRole([Roles.USUARIO, Roles.ADMINISTRADOR]), hijosRoutes);
 router.use('/cursos', authMiddleware.verifyToken, authorizationMiddleware.hasRole([Roles.USUARIO, Roles.ADMINISTRADOR]), cursosRoutes);

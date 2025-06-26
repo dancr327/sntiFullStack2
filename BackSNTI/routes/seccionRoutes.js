@@ -171,10 +171,8 @@ router.post(
  * /secciones:
  *   get:
  *     summary: Obtiene todas las secciones
- *     description: Accesible para ADMINISTRADORES y USUARIOS
+ *     description: Accesible para **TODO EL MUNDO 
  *     tags: [Secciones]
- *     security:
- *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: Lista de secciones
@@ -191,12 +189,7 @@ router.post(
  *       500:
  *         description: Error del servidor
  */
-router.get(
-  '/',
-  verifyToken,
-  hasRole([Roles.ADMINISTRADOR, Roles.USUARIO]),
-  seccionController.getAllSecciones
-);
+router.get('/', seccionController.getAllSecciones); //No se requiere autenticación para ver todas las secciones
 
 /**
  * @swagger

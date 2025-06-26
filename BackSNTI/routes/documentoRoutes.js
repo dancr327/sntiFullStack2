@@ -97,6 +97,42 @@ router.post(
   documentoController.subirDocumento
 );
 
+// Ruta para descargar documento
+// Declarar antes de las rutas con parámetros genéricos para evitar conflictos
+router.get(
+  '/descargar/:id_documento',
+  (req, res, next) => {
+    console.log('💥 Middleware: llegó petición de descarga');
+    next();
+  },
+  verifyToken,
+  hasRole([Roles.USUARIO]),
+  documentoController.descargarDocumento
+);
+
+/**
+ * @swagger
+ * /documentos/descargar/{id_documento}:
+ *   get:
+ *     summary: Descargar documento por ID
+ *     tags: [Documentos]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id_documento
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Descarga exitosa
+ *       404:
+ *         description: Documento no encontrado
+ *       500:
+ *         description: Error interno
+ */
+
 /**
  * @swagger
  * /documentos/{id_trabajador}/{tipo_documento}:
@@ -166,44 +202,6 @@ router.delete(
   verifyToken,
   hasRole([Roles.USUARIO]),
   documentoController.eliminarDocumentoPorTipo
-);
-
-/**
- * @swagger
- * /documentos/{id_documento}/descargar:
- *   get:
- *     summary: Descargar documento
- *     tags: [Documentos]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id_documento
- *         required: true
- *         schema:
- *           type: integer
- *     responses:
- *       200:
- *         description: Descarga iniciada
- *         content:
- *           application/octet-stream:
- *             schema:
- *               type: string
- *               format: binary
- *       404:
- *         description: Documento o archivo no encontrado
- *       500:
- *         description: Error en la descarga
- */
-router.get(
-  '/:id_documento/descargar',
-  (req, res, next) => {
-    console.log('💥 Middleware: llegó petición de descarga');
-    next();
-  },
-  verifyToken,
-  hasRole([Roles.USUARIO]),
-  documentoController.descargarDocumento
 );
 
 

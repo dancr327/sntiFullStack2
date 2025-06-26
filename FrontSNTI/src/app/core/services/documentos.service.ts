@@ -38,6 +38,6 @@ export class DocumentosService {
   }
 
   descargarDocumento(id_documento: number): Observable<Blob> {
-    return this.http.get(`${this.apiUrl}/${id_documento}/descargar`, { responseType: 'blob' });
+    return this.http.get(`${this.apiUrl}/descargar/${id_documento}`, { responseType: 'blob' });
   }
 }

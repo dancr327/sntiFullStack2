@@ -61,16 +61,18 @@ export class UserdocumentosComponent implements OnInit {
   }
 
   descargar(doc: Documento): void {
-    this.documentosService.descargarDocumento(doc.id_documento).subscribe({
-      next: blob => {
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = doc.nombre_archivo;
-        a.click();
-        window.URL.revokeObjectURL(url);
-      },
-      error: () => alert('No se pudo descargar el documento')
+  this.documentosService.descargarDocumento(doc.id_documento).subscribe({
+    next: (blob) => {
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = doc.nombre_archivo;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    },
+    error: () => alert('No se pudo descargar el documento')
     });
   }
 

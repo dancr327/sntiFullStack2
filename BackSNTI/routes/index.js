@@ -25,7 +25,7 @@ const trabajadoresCursosRoutes = require('./trabajadoresCursosRoutes'); // Aseg�
 // Si quieres un hasRole general aquí, necesitarás ajustar el middleware para que no falle sin roles.
 
 router.use('/trabajadores', authMiddleware.verifyToken, authorizationMiddleware.hasRole([Roles.USUARIO, Roles.ADMINISTRADOR]), trabajadorRoutes);
-router.use('/secciones', authMiddleware.verifyToken, authorizationMiddleware.hasRole, seccionRoutes );
+router.use('/secciones', seccionRoutes ); // Esta ruta no requiere autenticación, se maneja internamente en seccionRoutes... Modificacion hecha para que no se ncesite autenticacion para ver las secciones
 router.use('/documentos', authMiddleware.verifyToken, authorizationMiddleware.hasRole, documentoRoutes);
 router.use('/hijos', authMiddleware.verifyToken, hijosRoutes);
 router.use('/permisos', authMiddleware.verifyToken, authorizationMiddleware.hasRole([Roles.USUARIO, Roles.ADMINISTRADOR]), permisosRoutes);

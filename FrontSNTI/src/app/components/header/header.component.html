@@ -11,8 +11,18 @@
 
     <div class="collapse navbar-collapse" id="navbarNav">
       <ul class="navbar-nav ms-auto">
-        <li class="nav-item"><a class="nav-link" [routerLink]="['/secciones-sindicales']">Secciones Sindicales</a></li>
-        <li class="nav-item"><a class="nav-link" [routerLink]="['/contacto']">Contáctanos</a></li>
+        <li class="nav-item">
+          <a class="nav-link" [routerLink]="['/secciones-sindicales']" routerLinkActive="active">Secciones Sindicales</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" [routerLink]="['/galeria']" routerLinkActive="active">Galería</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" [routerLink]="['/mas-informacion']" routerLinkActive="active">Más Información</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" [routerLink]="['/contacto']" routerLinkActive="active">Contáctanos</a>
+        </li>
       </ul>
       <!-- SOLO se muestra si NO está logueado -->
       <a *ngIf="!authService.isLoggedIn()" class="btn btn-login ms-3" [routerLink]="['/login']">

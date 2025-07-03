@@ -12,7 +12,7 @@ const { errorHandler } = require('./middleware');
 const indexRoutes = require('./routes'); // Aquí están agrupadas yaa
 
 const seccionRoutes = require('./routes/seccionRoutes'); // Ajusta la ruta si es necesario
-const documentoRoutes = require('./routes/documentoRoutes'); // Ajusta la ruta si es necesario
+const documentosPanelRoutes = require('./routes/documentosPanelRoutes'); // Ajusta la ruta si es necesario
 const hijosRoutes = require('./routes/hijosRoutes'); // Ajusta la ruta si es necesario
 const authRoutes = require('./routes/authRoutes'); // Ajusta la ruta si es necesario
 const sancionesRoutes = require('./routes/sancionesRoutes'); // Ajusta la ruta si es necesario
@@ -80,7 +80,7 @@ app.use('/api', indexRoutes,);
 app.use('/api/auth', authRoutes); // Monta el enrutador con el prefijo /api/auth
 app.use('/trabajadores', trabajadorRoutes);
 app.use('/secciones', seccionRoutes); // Monta el enrutador con el prefijo /api/secciones
-app.use('/documentos', documentoRoutes); 
+app.use('/documentos', documentosPanelRoutes); 
 app.use('/hijos', hijosRoutes); // Monta el enrutador con el prefijo /api/hijos
 app.use('/auth', authRoutes); // Monta el enrutador con el prefijo /api/auth
 app.use('/sanciones', sancionesRoutes); // Monta el enrutador con el prefijo /api/sanciones

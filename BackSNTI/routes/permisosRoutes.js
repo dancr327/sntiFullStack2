@@ -1,27 +1,26 @@
-// routes/permisosRoutes.js
-const express = require("express");
+const express = require('express');
 const router = express.Router();
-const { param } = require('express-validator');
+const { param, body } = require('express-validator');
 const {
-    validarPermiso,
-    crearPermiso,
-    listarPermisos,
-    obtenerPermisosPorTrabajador,
-    consultarMiPermiso,
-    actualizarPermiso,
-    eliminarPermiso,
-    descargarDocumentoPermiso
-} = require("../controllers/permisosController");
-const { uploadAprobacionPermiso } = require("../config/multerPermisos");
-const { verifyToken } = require("../middleware/auth");
-const { hasRole } = require("../middleware/authorization");
+  validarPermiso,
+  validarPatchPermiso,
+  crearPermiso,
+  listarPermisos,
+  descargarAprobacion,
+  actualizarPermiso,
+  eliminarPermiso
+} = require('../controllers/permisosController');
+const { uploadPermisoAprobacion } = require('../config/multerPermisos');
+const { verifyToken } = require('../middleware/auth');
+const { hasRole } = require('../middleware/authorization');
 const Roles = require('../enums/roles.enum');
+const EstatusPermiso = require('../enums/estatusPermiso.enum');
 
 /**
  * @swagger
  * tags:
- * - name: Permisos
- *   description: Gestión de permisos de trabajadores y documentos asociados
+ *   - name: Permisos
+ *     description: Registro y gestión de permisos de trabajador
  */
 
 /**
@@ -32,214 +31,66 @@ const Roles = require('../enums/roles.enum');
  *       type: object
  *       required:
  *         - id_trabajador
+ *         - tipo_permiso
  *         - fecha_inicio
  *         - fecha_fin
  *         - motivo
  *       properties:
  *         id_trabajador:
  *           type: integer
- *           example: 1
+ *           example: 3
  *         tipo_permiso:
  *           type: string
- *           maxLength: 20
  *           example: "Vacaciones"
  *         fecha_inicio:
  *           type: string
  *           format: date
- *           example: "2024-06-01"
+ *           example: "2025-07-01"
  *         fecha_fin:
  *           type: string
  *           format: date
- *           example: "2024-06-15"
+ *           example: "2025-07-10"
  *         motivo:
  *           type: string
  *           example: "Viaje familiar"
  *         estatus:
  *           type: string
- *           maxLength: 20
- *           example: "Aprobado"
- * 
- *     PermisoUpdateInput:
- *       type: object
- *       properties:
- *         id_trabajador:
- *           type: integer
- *           example: 1
- *         tipo_permiso:
+ *           enum: [Pendiente, Aprobado, Denegado, NoSolicitado]
+ *           example: "Pendiente"
+ *         aprobacion:
  *           type: string
- *           example: "Permiso por Enfermedad"
- *         fecha_inicio:
- *           type: string
- *           format: date
- *           example: "2024-07-01"
- *         fecha_fin:
- *           type: string
- *           format: date
- *           example: "2024-07-03"
- *         motivo:
- *           type: string
- *           example: "Cita médica"
- *         estatus:
- *           type: string
- *           example: "Aprobado"
- * 
+ *           format: binary
  *     PermisoOutput:
  *       type: object
  *       properties:
- *         id_permiso:
- *           type: integer
- *           readOnly: true
- *           example: 1
- *         id_trabajador:
- *           type: integer
- *           example: 1
- *         tipo_permiso:
- *           type: string
- *           example: "Vacaciones"
- *         fecha_inicio:
- *           type: string
- *           format: date
- *           example: "2024-06-01"
- *         fecha_fin:
- *           type: string
- *           format: date
- *           example: "2024-06-15"
- *         motivo:
- *           type: string
- *           example: "Viaje familiar"
- *         estatus:
- *           type: string
- *           example: "Aprobado"
- *         documento_aprobacion_id:
- *           type: integer
- *           example: 101
- *         fecha_registro:
- *           type: string
- *           format: date-time
- *           readOnly: true
- *         trabajadores:
- *           type: object
- *           properties:
- *             nombre: 
- *               type: string
- *               example: "Juan"
- *             apellido_paterno: 
- *               type: string
- *               example: "Pérez"
- *             apellido_materno: 
- *               type: string
- *               example: "Gómez"
- *             identificador: 
- *               type: string
- *               example: "juan.perez"
+ *         id_permiso: { type: integer }
+ *         id_trabajador: { type: integer }
+ *         tipo_permiso: { type: string }
+ *         fecha_inicio: { type: string, format: date }
+ *         fecha_fin: { type: string, format: date }
+ *         motivo: { type: string }
+ *         estatus: { type: string }
+ *         fecha_registro: { type: string, format: date-time }
+ *         documento_aprobacion_id: { type: integer }
  *         documentos:
- *           type: object
- *           properties:
- *             id_documento: 
- *               type: integer
- *               example: 101
- *             nombre_archivo: 
- *               type: string
- *               example: "aprobacion.pdf"
- *             ruta_almacenamiento: 
- *               type: string
- *               example: "uploads/aprobaciones/1717000000000-file.pdf"
- *             tipo_documento: 
- *               type: string
- *               example: "Aprobación"
- *             fecha_subida: 
- *               type: string
- *               format: date-time
- * 
- *   responses:
- *     400Error:
- *       description: Error de validación
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               success: 
- *                 type: boolean
- *                 example: false
- *               message: 
- *                 type: string
- *                 example: "Error de validación"
- *               errors:
- *                 type: array
- *                 items:
- *                   type: object
- *                   properties:
- *                     msg: 
- *                       type: string
- *                     param: 
- *                       type: string
- *                     location: 
- *                       type: string
- *     401Error:
- *       description: No autorizado
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               success: 
- *                 type: boolean
- *                 example: false
- *               message: 
- *                 type: string
- *                 example: "Acceso no autorizado"
- *     403Error:
- *       description: Prohibido
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               success: 
- *                 type: boolean
- *                 example: false
- *               message: 
- *                 type: string
- *                 example: "Acceso denegado"
- *     404Error:
- *       description: No encontrado
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               success: 
- *                 type: boolean
- *                 example: false
- *               message: 
- *                 type: string
- *                 example: "Recurso no encontrado"
- *     500Error:
- *       description: Error del servidor
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               success: 
- *                 type: boolean
- *                 example: false
- *               message: 
- *                 type: string
- *                 example: "Error interno"
- *               error: 
- *                 type: string
+ *           $ref: '#/components/schemas/Documento'
+ *     Documento:
+ *       type: object
+ *       properties:
+ *         id_documento: { type: integer }
+ *         nombre_archivo: { type: string }
+ *         tipo_documento: { type: string }
+ *         ruta_almacenamiento: { type: string }
+ *         fecha_subida: { type: string, format: date-time }
+ *         tamano_bytes: { type: string }
+ *         mimetype: { type: string }
  */
-
-// --- Rutas para Permisos ---
 
 /**
  * @swagger
  * /permisos:
  *   post:
- *     summary: Crea un nuevo permiso con documento
- *     description: Accesible solo para ADMINISTRADORES
+ *     summary: Crea un permiso para trabajador y sube documento de aprobación (ADMIN)
  *     tags: [Permisos]
  *     security:
  *       - bearerAuth: []
@@ -248,304 +99,193 @@ const Roles = require('../enums/roles.enum');
  *       content:
  *         multipart/form-data:
  *           schema:
- *             type: object
- *             required:
- *               - id_trabajador
- *               - fecha_inicio
- *               - fecha_fin
- *               - motivo
- *               - documento
- *             properties:
- *               id_trabajador:
- *                 type: integer
- *                 example: 1
- *               tipo_permiso:
- *                 type: string
- *                 example: "Vacaciones"
- *               fecha_inicio:
- *                 type: string
- *                 format: date
- *                 example: "2024-06-01"
- *               fecha_fin:
- *                 type: string
- *                 format: date
- *                 example: "2024-06-15"
- *               motivo:
- *                 type: string
- *                 example: "Viaje familiar"
- *               estatus:
- *                 type: string
- *                 example: "Aprobado"
- *               documento:
- *                 type: string
- *                 format: binary
+ *             $ref: '#/components/schemas/PermisoInput'
  *     responses:
  *       201:
- *         description: Permiso creado con documento
+ *         description: Permiso registrado correctamente.
  *         content:
  *           application/json:
  *             schema:
  *               type: object
  *               properties:
- *                 success: 
- *                   type: boolean
- *                   example: true
- *                 message: 
- *                   type: string
- *                 data:
- *                   $ref: '#/components/schemas/PermisoOutput'
- *       400:
- *         $ref: '#/components/responses/400Error'
- *       401:
- *         $ref: '#/components/responses/401Error'
- *       403:
- *         $ref: '#/components/responses/403Error'
- *       404:
- *         $ref: '#/components/responses/404Error'
- *       500:
- *         $ref: '#/components/responses/500Error'
+ *                 success: { type: boolean }
+ *                 message: { type: string }
+ *                 data: { $ref: '#/components/schemas/PermisoOutput' }
+ *       400: { description: Error de validación }
+ *       401: { description: No autorizado }
+ *       500: { description: Error interno }
  */
 router.post(
-    "/",
-    verifyToken,
-    hasRole([Roles.ADMINISTRADOR]),
-    uploadAprobacionPermiso.single('documento'),
-    validarPermiso,
-    crearPermiso
+  '/',
+  verifyToken,
+  hasRole([Roles.ADMINISTRADOR]),
+  uploadPermisoAprobacion.single('aprobacion'),
+  validarPermiso,
+  crearPermiso
 );
 
 /**
  * @swagger
  * /permisos:
  *   get:
- *     summary: Lista todos los permisos
- *     description: Accesible solo para ADMINISTRADORES
- *     tags: [Permisos]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: Lista de permisos
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success: 
- *                   type: boolean
- *                   example: true
- *                 message: 
- *                   type: string
- *                 data:
- *                   type: array
- *                   items:
- *                     $ref: '#/components/schemas/PermisoOutput'
- *       401:
- *         $ref: '#/components/responses/401Error'
- *       403:
- *         $ref: '#/components/responses/403Error'
- *       500:
- *         $ref: '#/components/responses/500Error'
- */
-router.get(
-    "/",
-    verifyToken,
-    hasRole([Roles.ADMINISTRADOR]),
-    listarPermisos
-);
-
-/**
- * @swagger
- * /permisos/trabajador/{idTrabajador}:
- *   get:
- *     summary: Obtiene permisos por trabajador
- *     description: Accesible solo para ADMINISTRADORES
+ *     summary: "Lista los permisos (ADMIN: todos, USUARIO: solo propios)"
  *     tags: [Permisos]
  *     security:
  *       - bearerAuth: []
  *     parameters:
- *       - in: path
- *         name: idTrabajador
- *         schema:
- *           type: integer
- *         required: true
- *         description: ID del trabajador
+ *       - in: query
+ *         name: trabajador
+ *         schema: { type: integer }
+ *         required: false
+ *         description: ID del trabajador (opcional, solo admin)
  *     responses:
  *       200:
- *         description: Permisos del trabajador
+ *         description: Permisos obtenidos correctamente.
  *         content:
  *           application/json:
  *             schema:
  *               type: object
  *               properties:
- *                 success: 
- *                   type: boolean
- *                   example: true
- *                 message: 
- *                   type: string
+ *                 success: { type: boolean }
+ *                 message: { type: string }
  *                 data:
  *                   type: array
  *                   items:
  *                     $ref: '#/components/schemas/PermisoOutput'
- *       400:
- *         $ref: '#/components/responses/400Error'
- *       401:
- *         $ref: '#/components/responses/401Error'
- *       403:
- *         $ref: '#/components/responses/403Error'
- *       404:
- *         $ref: '#/components/responses/404Error'
- *       500:
- *         $ref: '#/components/responses/500Error'
+ *       401: { description: No autorizado }
+ *       500: { description: Error interno }
  */
 router.get(
-    "/trabajador/:idTrabajador",
-    verifyToken,
-    hasRole([Roles.ADMINISTRADOR]),
-    [
-        param('idTrabajador')
-            .isInt().withMessage('ID debe ser entero')
-            .toInt()
-    ],
-    obtenerPermisosPorTrabajador
+  '/',
+  verifyToken,
+  hasRole([Roles.ADMINISTRADOR, Roles.USUARIO]),
+  listarPermisos
 );
 
 /**
  * @swagger
- * /permisos/mi-permiso:
+ * /permisos/{id}/descargar-aprobacion:
  *   get:
- *     summary: Obtiene mis permisos
- *     description: Accesible para ADMINISTRADORES y USUARIOS
- *     tags: [Permisos]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: Permisos del usuario
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success: 
- *                   type: boolean
- *                   example: true
- *                 message: 
- *                   type: string
- *                 data:
- *                   type: array
- *                   items:
- *                     $ref: '#/components/schemas/PermisoOutput'
- *       401:
- *         $ref: '#/components/responses/401Error'
- *       500:
- *         $ref: '#/components/responses/500Error'
- */
-router.get(
-    "/mi-permiso",
-    verifyToken,
-    hasRole([Roles.ADMINISTRADOR, Roles.USUARIO]),
-    consultarMiPermiso
-);
-
-
-/**
- * @swagger
- * /permisos/{id}:
- *   delete:
- *     summary: Elimina un permiso
- *     description: Accesible solo para ADMINISTRADORES
+ *     summary: Descarga el documento de aprobación del permiso (usuario propio o admin)
  *     tags: [Permisos]
  *     security:
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
- *         schema:
- *           type: integer
+ *         schema: { type: integer }
  *         required: true
  *         description: ID del permiso
  *     responses:
  *       200:
- *         description: Permiso eliminado
+ *         description: Archivo de aprobación descargado exitosamente.
  *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success: 
- *                   type: boolean
- *                   example: true
- *                 message: 
- *                   type: string
- *       400:
- *         $ref: '#/components/responses/400Error'
- *       401:
- *         $ref: '#/components/responses/401Error'
- *       403:
- *         $ref: '#/components/responses/403Error'
- *       404:
- *         $ref: '#/components/responses/404Error'
- *       500:
- *         $ref: '#/components/responses/500Error'
+ *           application/pdf: {}
+ *           application/msword: {}
+ *           application/vnd.openxmlformats-officedocument.wordprocessingml.document: {}
+ *       401: { description: No autorizado }
+ *       403: { description: Prohibido }
+ *       404: { description: Documento no encontrado }
+ *       500: { description: Error interno }
  */
-router.delete(
-    "/:id",
-    verifyToken,
-    hasRole([Roles.ADMINISTRADOR]),
-    [
-        param('id')
-            .isInt().withMessage('ID debe ser entero')
-            .toInt()
-    ],
-    eliminarPermiso
+router.get(
+  '/:id/descargar-aprobacion',
+  verifyToken,
+  hasRole([Roles.ADMINISTRADOR, Roles.USUARIO]),
+  param('id').isInt().withMessage('ID debe ser entero').toInt(),
+  descargarAprobacion
 );
 
 /**
  * @swagger
- * /permisos/documento/{documentoId}/descargar:
- *   get:
- *     summary: Descarga un documento de permiso
- *     description: Accesible para ADMINISTRADORES y USUARIOS (solo propietario)
+ * /permisos/{id}:
+ *   patch:
+ *     summary: Actualiza un permiso, estatus y/o documento (ADMIN)
  *     tags: [Permisos]
  *     security:
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
- *         name: documentoId
- *         schema:
- *           type: integer
+ *         name: id
+ *         schema: { type: integer }
  *         required: true
- *         description: ID del documento
+ *         description: ID del permiso
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               tipo_permiso: { type: string }
+ *               fecha_inicio: { type: string, format: date }
+ *               fecha_fin: { type: string, format: date }
+ *               motivo: { type: string }
+ *               estatus:
+ *                 type: string
+ *                 enum: [Pendiente, Aprobado, Denegado, NoSolicitado]
+ *               aprobacion:
+ *                 type: string
+ *                 format: binary
  *     responses:
  *       200:
- *         description: Documento descargado
+ *         description: Permiso actualizado correctamente.
  *         content:
- *           application/pdf: {}
- *           image/jpeg: {}
- *           image/png: {}
- *           image/webp: {}
- *       400:
- *         $ref: '#/components/responses/400Error'
- *       401:
- *         $ref: '#/components/responses/401Error'
- *       403:
- *         $ref: '#/components/responses/403Error'
- *       404:
- *         $ref: '#/components/responses/404Error'
- *       500:
- *         $ref: '#/components/responses/500Error'
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean }
+ *                 message: { type: string }
+ *                 data: { $ref: '#/components/schemas/PermisoOutput' }
+ *       400: { description: Error de validación }
+ *       401: { description: No autorizado }
+ *       404: { description: Permiso no encontrado }
+ *       500: { description: Error interno }
  */
-router.get(
-    "/documento/:documentoId/descargar",
-    verifyToken,
-    hasRole([Roles.ADMINISTRADOR, Roles.USUARIO]),
-    [
-        param('documentoId')
-            .isInt().withMessage('ID debe ser entero')
-            .toInt()
-    ],
-    descargarDocumentoPermiso
+router.patch(
+  '/:id',
+  verifyToken,
+  hasRole([Roles.ADMINISTRADOR]),
+  uploadPermisoAprobacion.single('aprobacion'),
+  validarPatchPermiso,
+  actualizarPermiso
+);
+
+/**
+ * @swagger
+ * /permisos/{id}:
+ *   delete:
+ *     summary: Elimina permiso y documento asociado (ADMIN)
+ *     tags: [Permisos]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema: { type: integer }
+ *         required: true
+ *         description: ID del permiso
+ *     responses:
+ *       200:
+ *         description: Permiso y documento eliminados correctamente.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean }
+ *                 message: { type: string }
+ *       401: { description: No autorizado }
+ *       404: { description: Permiso no encontrado }
+ *       500: { description: Error interno }
+ */
+router.delete(
+  '/:id',
+  verifyToken,
+  hasRole([Roles.ADMINISTRADOR]),
+  param('id').isInt().withMessage('ID debe ser entero').toInt(),
+  eliminarPermiso
 );
 
 module.exports = router;

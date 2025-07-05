@@ -41,7 +41,7 @@
             <tr *ngFor="let doc of documentos">
               <td>{{ doc.tipo_documento }}</td>
               <td>{{ doc.nombre_archivo }}</td>
-              <td>{{ doc.fecha_subida | date : 'dd/MM/yyyy' }}</td>
+              <td>{{ doc.fecha_subida | date : 'dd/MM/yyyy':'UTC' }}</td>
               <td>
                 <button class="btn btn-sm btn-light-blue me-2" (click)="descargar(doc)" title="Descargar">
                   <i class="bi bi-download"></i>

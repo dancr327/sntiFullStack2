@@ -15,7 +15,8 @@
             <select id="filtroEstatus" class="form-select" [(ngModel)]="filtroEstatus" (change)="filtrarSanciones()">
               <option value="Todas">Todas</option>
               <option value="Activa">Activas</option>
-              <option value="Finalizada">Finalizadas</option>
+              <option value="Inactiva">Inactivas</option>
+              <option value="Pendiente">Pendientes</option>
             </select>
           </div>
           <div class="col-md-6 d-flex align-items-end">
@@ -42,18 +43,24 @@
               <tr *ngFor="let sancion of sancionesFiltradas">
                 <td>{{ sancion.tipo_sancion }}</td>
                 <td>{{ sancion.descripcion }}</td>
-                <td>{{ sancion.fecha_aplicacion | date:'dd/MM/yyyy' }}</td>
-                <td>{{ sancion.fecha_fin | date:'dd/MM/yyyy' }}</td>
+                <td>{{ sancion.fecha_aplicacion | date:'dd/MM/yyyy':'UTC' }}</td>
+                <td>{{ sancion.fecha_fin | date:'dd/MM/yyyy':'UTC' }}</td>
                 <td>
                   <span [class.badge-active]="sancion.estatus === 'Activa'" 
-                        [class.badge-inactive]="sancion.estatus === 'Finalizada'" 
+                        [class.badge-inactive]="sancion.estatus === 'Inactiva'"
+                        [class.badge-pending]="sancion.estatus === 'Pendiente'" 
                         class="badge">
                     {{ sancion.estatus }}
                   </span>
                 </td>
                 <td>
-                  <button class="btn btn-sm btn-outline-purple" (click)="verDetalles(sancion)">
-                    <i class="bi bi-eye-fill"></i> Detalles
+                  <button
+                    class="btn btn-sm btn-outline-purple"
+                    (click)="verDetalles(sancion)"
+                    data-bs-toggle="modal"
+                    data-bs-target="#detalleSancionModal"
+                  >
+                     <span class="material-icons">visibility</span>
                   </button>
                 </td>
               </tr>
@@ -65,7 +72,7 @@
         </div>
   
         <!-- Paginación -->
-        <div class="d-flex justify-content-between align-items-center mt-3">
+        <!-- <div class="d-flex justify-content-between align-items-center mt-3">
           <div>
             Mostrando {{ sancionesFiltradas.length }} de {{ sanciones.length }} sanciones
           </div>
@@ -78,7 +85,7 @@
               Siguiente <i class="bi bi-chevron-right"></i>
             </button>
           </div>
-        </div>
+        </div> -->
       </div>
     </div>
   </div>
@@ -98,8 +105,9 @@
             </div>
             <div class="col-md-6">
               <strong>Estatus:</strong> 
-              <span [class.badge-active]="sancionSeleccionada.estatus === 'Activa'" 
-                    [class.badge-inactive]="sancionSeleccionada.estatus === 'Finalizada'" 
+              <span [class.badge-active]="sancionSeleccionada.estatus === 'Activa'"
+                    [class.badge-inactive]="sancionSeleccionada.estatus === 'Inactiva'"
+                    [class.badge-pending]="sancionSeleccionada.estatus === 'Pendiente'"
                     class="badge">
                 {{ sancionSeleccionada.estatus }}
               </span>
@@ -107,10 +115,10 @@
           </div>
           <div class="row mb-3">
             <div class="col-md-6">
-              <strong>Fecha Aplicación:</strong> {{ sancionSeleccionada.fecha_aplicacion | date:'dd/MM/yyyy' }}
+              <strong>Fecha Aplicación:</strong> {{ sancionSeleccionada.fecha_aplicacion | date:'dd/MM/yyyy':'UTC' }}
             </div>
             <div class="col-md-6">
-              <strong>Fecha Fin:</strong> {{ sancionSeleccionada.fecha_fin | date:'dd/MM/yyyy'  }}
+              <strong>Fecha Fin:</strong> {{ sancionSeleccionada.fecha_fin | date:'dd/MM/yyyy':'UTC' }}
             </div>
           </div>
           <div class="mb-3">

@@ -141,10 +141,10 @@
             </li>
             <li class="list-group-item"><b>Situación Sentimental:</b> {{ detalleTrabajador.situacion_sentimental }}</li>
             <li class="list-group-item"><b>N° Hijos:</b> {{ detalleTrabajador.numero_hijos }}</li>
-            <li class="list-group-item"><b>Fecha Ingreso:</b> {{ detalleTrabajador.fecha_ingreso | date : "yyyy-MM-dd" }}</li>
-            <li class="list-group-item"><b>Fecha Ingreso Gobierno:</b> {{ detalleTrabajador.fecha_ingreso_gobierno | date : "yyyy-MM-dd" }}</li>
+            <li class="list-group-item"><b>Fecha Ingreso:</b> {{ detalleTrabajador.fecha_ingreso | date : "yyyy-MM-dd":"UTC" }}</li>
+            <li class="list-group-item"><b>Fecha Ingreso Gobierno:</b> {{ detalleTrabajador.fecha_ingreso_gobierno | date : "yyyy-MM-dd":"UTC" }}</li>
             <li class="list-group-item"><b>Rol:</b> {{ detalleTrabajador.rol }}</li>
-            <li class="list-group-item"><b>Fecha Actualización:</b> {{ detalleTrabajador.fecha_actualizacion | date : "yyyy-MM-dd HH:mm" }}</li>
+            <li class="list-group-item"><b>Fecha Actualización:</b> {{ detalleTrabajador.fecha_actualizacion | date : "yyyy-MM-dd HH:mm":"UTC" }}</li>
           </ul>
           <button class="btn btn-secondary btn-sm mt-3" (click)="detalleTrabajador = null">
             Cerrar detalle

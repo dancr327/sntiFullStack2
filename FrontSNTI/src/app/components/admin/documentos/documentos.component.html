@@ -33,12 +33,12 @@
                     <div class="d-flex flex-column">
                       <span>{{doc.nombre}}</span>
                       <small class="text-muted d-sm-none">{{doc.tipo}} • {{doc.tamanio}} KB</small>
-                      <small class="text-muted d-lg-none">{{doc.fecha | date:'dd/MM/yyyy'}}</small>
+                      <small class="text-muted d-lg-none">{{doc.fecha | date:'dd/MM/yyyy':'UTC'}}</small>
                     </div>
                   </td>
                   <td class="d-none d-sm-table-cell">{{doc.tipo}}</td>
                   <td class="d-none d-md-table-cell">{{doc.tamanio}} KB</td>
-                  <td class="d-none d-lg-table-cell">{{doc.fecha | date:'dd/MM/yyyy'}}</td>
+                  <td class="d-none d-lg-table-cell">{{doc.fecha | date:'dd/MM/yyyy':'UTC'}}</td>
                   <td>
                     <div class="d-flex">
                       <button class="btn btn-sm btn-light-blue me-1 me-md-2" title="Descargar">

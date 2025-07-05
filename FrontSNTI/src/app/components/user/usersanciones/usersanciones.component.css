@@ -39,12 +39,17 @@
 }
 
 .badge-active {
-  background-color: #dc3545;
+  background-color: #198754;
   color: white;
 }
 
 .badge-inactive {
-  background-color: #198754;
+  background-color: #ffc107 !important; 
+  color: #212529;
+}
+
+.badge-pending {
+  background-color: #6c757d !important;
   color: white;
 }
 

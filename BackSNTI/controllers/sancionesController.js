@@ -84,6 +84,42 @@ const crearSancion = async (req, res) => {
     }
 };
 
+// Revisa sanciones y marca como Inactiva aquellas cuya fecha_fin ya pasó
+// Revisa sanciones y marca como Inactiva aquellas cuya fecha_fin ya pasó
+const actualizarSancionesVencidas = async (sanciones) => {
+    const ahora = new Date();
+    const resultado = [];
+    for (const sancion of sanciones) {
+        if (sancion.fecha_fin) {
+            const fechaFin = new Date(sancion.fecha_fin);
+            // La sanción expira al inicio del día siguiente a fecha_fin
+            const vencimiento = new Date(fechaFin.getTime());
+            vencimiento.setUTCDate(vencimiento.getUTCDate() + 1);
+
+            if (ahora >= vencimiento && sancion.estatus !== 'Inactiva') {
+                const actualizada = await prisma.sanciones.update({
+                    where: { id_sancion: sancion.id_sancion },
+                    data: { estatus: 'Inactiva' },
+                    include: {
+                        trabajadores: {
+                            select: {
+                                nombre: true,
+                                apellido_paterno: true,
+                                apellido_materno: true,
+                                identificador: true
+                            }
+                        }
+                    }
+                });
+                resultado.push(actualizada);
+                continue;
+            }
+        }
+        resultado.push(sancion);
+    }
+    return resultado;
+};
+
 /**
  * @function listarSanciones
  * @description Lista todas las sanciones registradas en el sistema. Solo accesible para ADMINISTRADORES.
@@ -92,7 +128,17 @@ const crearSancion = async (req, res) => {
  */
 const listarSanciones = async (req, res) => {
     try {
-        const sanciones = await prisma.sanciones.findMany({
+        // Obtener la sección del administrador autenticado
+        const admin = await prisma.trabajadores.findUnique({
+            where: { id_trabajador: req.user.id },
+            select: { id_seccion: true }
+        });
+
+        const whereClause = admin?.id_seccion
+            ? { trabajadores: { id_seccion: admin.id_seccion } }
+            : undefined;
+        let sanciones = await prisma.sanciones.findMany({ // cambie const a let para poder actualizar sanciones vencidas (CAMBIO HECHO POR DANIEL)
+            where: whereClause,
             include: {
                 trabajadores: { // Incluye la información del trabajador asociado
                     select: {
@@ -104,6 +150,8 @@ const listarSanciones = async (req, res) => {
                 }
             }
         });
+
+        sanciones = await actualizarSancionesVencidas(sanciones); // Actualiza las sanciones vencidas (CAMBIO HECHO POR DANIEL)
 
         return res.status(200).json({
             success: true,
@@ -141,7 +189,7 @@ const obtenerSancionesPorTrabajador = async (req, res) => {
             return res.status(404).json({ success: false, message: 'El trabajador especificado no existe.' });
         }
 
-        const sanciones = await prisma.sanciones.findMany({
+        let sanciones = await prisma.sanciones.findMany({ // cambie const a let para poder actualizar sanciones vencidas (CAMBIO HECHO POR DANIEL)
             where: {
                 id_trabajador: idTrabajador
             },
@@ -156,6 +204,8 @@ const obtenerSancionesPorTrabajador = async (req, res) => {
                 }
             }
         });
+
+        sanciones = await actualizarSancionesVencidas(sanciones); // Actualiza las sanciones vencidas (CAMBIO HECHO POR DANIEL)
 
         return res.status(200).json({
             success: true,
@@ -179,10 +229,18 @@ const miSancion = async (req, res) => {
     try {
         const userId = req.user.id; // El ID del usuario se adjunta desde verifyToken
 
-        const sanciones = await prisma.sanciones.findMany({
-            where: {
-                id_trabajador: userId
-            },
+        const { estatus } = req.query;
+
+        const whereClause = {
+            id_trabajador: userId
+        };
+
+        if (estatus) {
+            whereClause.estatus = estatus;
+        }
+
+        let sanciones = await prisma.sanciones.findMany({
+            where: whereClause,// CAMBIO HECHO POR DANIEL
             include: {
                 trabajadores: {
                     select: {
@@ -194,6 +252,7 @@ const miSancion = async (req, res) => {
                 }
             }
         });
+        sanciones = await actualizarSancionesVencidas(sanciones); // Actualiza las sanciones vencidas (CAMBIO HECHO POR DANIEL)
 
         if (sanciones.length === 0) {
             return res.status(200).json({ success: true, message: 'No tienes sanciones registradas.', data: [] });

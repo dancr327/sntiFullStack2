@@ -22,8 +22,8 @@
                 <tr *ngFor="let permiso of permisosActivos">
                   <td>{{ permiso.tipo_permiso }}</td>
                   <td>{{ permiso.motivo }}</td>
-                  <td>{{ permiso.fecha_inicio | date : "dd/MM/yyyy" }}</td>
-                  <td>{{ permiso.fecha_fin | date : "dd/MM/yyyy" }}</td>
+                  <td>{{ permiso.fecha_inicio | date : "dd/MM/yyyy":"UTC" }}</td>
+                  <td>{{ permiso.fecha_fin | date : "dd/MM/yyyy":"UTC" }}</td>
                   <td>
                     <span
                       class="badge"
@@ -76,8 +76,8 @@
                 >
                   <td>{{ permiso.tipo_permiso }}</td>
                   <td>{{ permiso.motivo }}</td>
-                  <td>{{ permiso.fecha_inicio | date : "dd/MM/yyyy" }}</td>
-                  <td>{{ permiso.fecha_fin | date : "dd/MM/yyyy" }}</td>
+                  <td>{{ permiso.fecha_inicio | date : "dd/MM/yyyy":"UTC" }}</td>
+                  <td>{{ permiso.fecha_fin | date : "dd/MM/yyyy":"UTC" }}</td>
                   <td>
                     <span
                       class="badge"

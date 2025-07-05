@@ -56,10 +56,10 @@
               </td>
               <td class="d-none d-sm-table-cell">{{ permiso.tipo_permiso }}</td>
               <td class="d-none d-lg-table-cell">
-                {{ permiso.fecha_inicio | date : "dd/MM/yyyy" }}
+                {{ permiso.fecha_inicio | date : "dd/MM/yyyy":"UTC" }}
               </td>
               <td class="d-none d-lg-table-cell">
-                {{ permiso.fecha_fin | date : "dd/MM/yyyy" }}
+                {{ permiso.fecha_fin | date : "dd/MM/yyyy":"UTC" }}
               </td>
               <td>
                 <span class="badge"
@@ -267,11 +267,11 @@
             <div class="row mb-3">
               <div class="col-md-6">
                 <h6>Fecha Inicio:</h6>
-                <p>{{ permisoSeleccionado.fecha_inicio | date : "dd/MM/yyyy" }}</p>
+                <p>{{ permisoSeleccionado.fecha_inicio | date : "dd/MM/yyyy":"UTC" }}</p>
               </div>
               <div class="col-md-6">
                 <h6>Fecha Fin:</h6>
-                <p>{{ permisoSeleccionado.fecha_fin | date : "dd/MM/yyyy" }}</p>
+                <p>{{ permisoSeleccionado.fecha_fin | date : "dd/MM/yyyy":"UTC" }}</p>
               </div>
             </div>
             <div class="mb-3">

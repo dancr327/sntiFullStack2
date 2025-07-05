@@ -2,9 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { SidebarComponent } from '../sidebar/sidebar.component'; // Importación directa
-
+import { SancionesService } from '../../../core/services/sanciones.service';
 
 
 @Component({
@@ -14,12 +12,11 @@ import { SidebarComponent } from '../sidebar/sidebar.component'; // Importación
     CommonModule,
     FormsModule,
     RouterModule,
-    SidebarComponent // Añadido correctamente
   ],
   templateUrl: './usersanciones.component.html',
   styleUrls: ['./usersanciones.component.css']
 })
-export class UsersancionesComponent {
+export class UsersancionesComponent implements OnInit {
   sanciones: any[] = [];
   sancionesFiltradas: any[] = [];
   sancionSeleccionada: any = null;
@@ -27,20 +24,19 @@ export class UsersancionesComponent {
   paginaActual: number = 1;
   itemsPorPagina: number = 10;
 
-  constructor(private http: HttpClient) {}
+  constructor(private sancionesService: SancionesService) {}
 
   ngOnInit(): void {
     this.cargarSanciones();
   }
 
   cargarSanciones(): void {
-    // Obtener el id_trabajador del servicio de autenticación o de donde lo tengas
-    const idTrabajador = 1; // Reemplaza con el id real del trabajador
-    
-    this.http.get<any[]>(`/api/sanciones/trabajador/${idTrabajador}`).subscribe({
-      next: (data) => {
-        this.sanciones = data;
-        this.filtrarSanciones();
+     const estatus = this.filtroEstatus === 'Todas' ? undefined : this.filtroEstatus;
+    this.sancionesService.getMisSanciones(estatus).subscribe({
+      next: (resp) => {
+        this.sanciones = resp.data || [];
+        this.sancionesFiltradas = [...this.sanciones];
+        this.paginaActual = 1;
       },
       error: (err) => {
         console.error('Error al cargar sanciones:', err);
@@ -49,14 +45,7 @@ export class UsersancionesComponent {
   }
 
   filtrarSanciones(): void {
-    if (this.filtroEstatus === 'Todas') {
-      this.sancionesFiltradas = [...this.sanciones];
-    } else {
-      this.sancionesFiltradas = this.sanciones.filter(
-        s => s.estatus === this.filtroEstatus
-      );
-    }
-    this.paginaActual = 1;
+    this.cargarSanciones();
   }
 
   recargarSanciones(): void {
@@ -65,7 +54,10 @@ export class UsersancionesComponent {
 
   verDetalles(sancion: any): void {
     this.sancionSeleccionada = sancion;
-    const modal = document.getElementById('detalleSancionModal');
+    const modalEl = document.getElementById('detalleSancionModal');
+    if (modalEl) {
+      (window as any).bootstrap?.Modal.getOrCreateInstance(modalEl).show();
+    }
  
   }
 

@@ -15,6 +15,7 @@ export class UserpermisoComponent implements OnInit {
   permisos: Permiso[] = [];
   permisosActivos: Permiso[] = [];
   permisosCaducados: Permiso[] = [];
+  permisoSeleccionado: Permiso | null = null;
 
   constructor(private permisosService: PermisosService) {}
 
@@ -41,6 +42,14 @@ export class UserpermisoComponent implements OnInit {
     this.permisosActivos = this.permisos.filter(p => new Date(p.fecha_fin).getTime() >= hoy);
     this.permisosCaducados = this.permisos.filter(p => new Date(p.fecha_fin).getTime() < hoy);
   }
+
+   verDetalles(permiso: Permiso): void {
+    this.permisoSeleccionado = permiso;
+    const modalEl = document.getElementById('detallePermisoModal');
+    if (modalEl) {
+      (window as any).bootstrap?.Modal.getOrCreateInstance(modalEl).show();
+    }
+  }
   
   descargarDocumento(permiso: Permiso): void {
     if (!permiso.documentos) {
@@ -48,7 +57,7 @@ export class UserpermisoComponent implements OnInit {
       return;
     }
     const nombre = permiso.documentos.nombre_archivo || 'documento.pdf';
-    this.permisosService.descargarDocumento(permiso.documentos.id_documento).subscribe({
+    this.permisosService.descargarDocumento(permiso.id_permiso).subscribe({ 
       next: (blob) => {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');

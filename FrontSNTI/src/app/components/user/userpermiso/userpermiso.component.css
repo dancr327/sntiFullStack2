@@ -1,27 +1,18 @@
-/* Colores morados y botones */
-.bg-purple {
-  background-color: #74c0fc;
+
+/* Estilos consistentes con la vista de admin/permisos */
+.bg-light-blue {
+  background-color: #74c0fc !important;
 }
 
-.btn {
-  background-color: #74c0fc;
-  color: white;
-  border-color: #74c0fc;
-}
-
-.btn:hover {
+.btn-light-blue {
   background-color: #74c0fc;
   border-color: #74c0fc;
   color: white;
 }
 
-.btn-outline {
-  color: #74c0fc;
-  border-color: #74c0fc;
-}
-
-.btn-outline:hover {
-  background-color: #74c0fc;
+.btn-light-blue:hover {
+  background-color: #4dabf7;
+  border-color: #4dabf7;
   color: white;
 }
 
@@ -41,8 +32,8 @@
   font-weight: 500;
 }
 
-.table-purple,
-.bg-purple.text-white,
+.table-light-blue,
+.bg-light-blue.text-white,
 .table th,
 .table thead th {
   background-color: #74c0fc !important;

@@ -24,27 +24,29 @@
 </div>
   <!-- Menú -->
   <ul class="menu">
+
+    <!-- Mi perfil -->
     <li class="menu-item" [routerLink]="['userperfil']" routerLinkActive="active">
       <mat-icon>edit</mat-icon>
       <span class="menu-text">Mi perfil</span>
     </li>
 
-    <!-- Ver Permisos -->
-      <li class="menu-item" [routerLink]="['userpermiso']" routerLinkActive="active">
-        <mat-icon>schedule</mat-icon>
-        <span class="menu-text">Mis permisos</span>
+    <!-- Mis Documentos -->
+      <li class="menu-item" [routerLink]="['userdocumentos']" routerLinkActive="active">
+        <mat-icon>description</mat-icon>
+        <span class="menu-text">Mis Docuementos</span>
       </li>
-      
+
       <!-- Mis Sanciones -->
       <li class="menu-item" [routerLink]="['usersanciones']" routerLinkActive="active">
         <mat-icon>warning</mat-icon>
         <span class="menu-text">Mis Sanciones</span>
       </li>
 
-            <!-- Mis Documentos -->
-      <li class="menu-item" [routerLink]="['userdocumentos']" routerLinkActive="active">
-        <mat-icon>description</mat-icon>
-        <span class="menu-text">Mis Docuementos</span>
+    <!-- Ver Permisos -->
+      <li class="menu-item" [routerLink]="['userpermiso']" routerLinkActive="active">
+        <mat-icon>schedule</mat-icon>
+        <span class="menu-text">Mis permisos</span>
       </li>
 
       <!-- Mis SHijos -->

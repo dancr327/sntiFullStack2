@@ -21,6 +21,7 @@ import { Usuario } from '../../../core/models/usuario.model';
 })
 export class PermisosComponent implements OnInit {
   filtroBusqueda: string = '';
+  filtroEstatus: string = 'Todas'; // Nuevo filtro para estatus
   permisos: Permiso[] = [];
   permisosFiltrados: Permiso[] = [];
   trabajadores: Trabajador[] = [];
@@ -131,7 +132,7 @@ export class PermisosComponent implements OnInit {
         formData.append(key, value as string);
       }
     });
-    formData.append('documento', this.archivoSeleccionado);
+    formData.append('aprobacion', this.archivoSeleccionado);
 
     this.permisosService.crearPermiso(formData).subscribe({
       next: (resp: any) => {
@@ -178,7 +179,8 @@ export class PermisosComponent implements OnInit {
   }
   const fileName = permiso.documentos.nombre_archivo || 'documento.pdf';
   this.permisosService
-    .descargarDocumento(permiso.documentos.id_documento)
+  // Se ajustó el componente de administración de permisos para cargar el archivo bajo el nuevo campo “aprobación” y para solicitar descargas utilizando el ID del permiso (cambio hecho por daniel)
+    .descargarDocumento(permiso.id_permiso) 
     .subscribe({
       next: (blob) => {
         const url = window.URL.createObjectURL(blob);
@@ -198,20 +200,18 @@ export class PermisosComponent implements OnInit {
 }
 
   filtrarPermisos(): void {
-    if (!this.filtroBusqueda) {
-      this.permisosFiltrados = [...this.permisos];
-      return;
-    }
+
     const termino = this.filtroBusqueda.toLowerCase();
-    this.permisosFiltrados = this.permisos.filter(
-      (p) =>
+    this.permisosFiltrados = this.permisos.filter((p) => {
+      const coincideBusqueda = !termino ||
         `${p.trabajadores.nombre} ${p.trabajadores.apellido_paterno} ${p.trabajadores.apellido_materno}`
-          .toLowerCase()
-          .includes(termino) ||
+          .toLowerCase().includes(termino) ||
         (p.tipo_permiso ?? '').toLowerCase().includes(termino) ||
         p.motivo.toLowerCase().includes(termino) ||
-        (p.estatus ?? '').toLowerCase().includes(termino)
-    );
+        (p.estatus ?? '').toLowerCase().includes(termino);
+      const coincideEstatus = this.filtroEstatus === 'Todas' || p.estatus === this.filtroEstatus;
+      return coincideBusqueda && coincideEstatus;
+    });
   }
 // Método para aplicar la fecha mínima de inicio (3 meses atrás)
   get minFechaInicio(): string {

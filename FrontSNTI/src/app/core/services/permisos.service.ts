@@ -22,12 +22,12 @@ export class PermisosService {
   }
   // Método para obtener los permisos del usuario autenticado
   getMisPermisos(): Observable<{ success: boolean; data: Permiso[] }> {
-    return this.http.get<{ success: boolean; data: Permiso[] }>(`${this.apiUrl}/mi-permiso`);
+    return this.http.get<{ success: boolean; data: Permiso[] }>(this.apiUrl); //cambio hecho para que vuelva a funcionar el listado de permisos del usuario autenticado
   }
-
-  descargarDocumento(id_documento: number) {
-  return this.http.get(`http://localhost:3000/permisos/documento/${id_documento}/descargar`, {
-    responseType: 'blob'
-  });
-}
+//Se actualizó el servicio de permisos para llamar al nuevo endpoint del backend para descargar documentos de aprobación
+  descargarDocumento(id_permiso: number) {
+    return this.http.get(`${this.apiUrl}/${id_permiso}/descargar-aprobacion`, {
+      responseType: 'blob'
+    }); 
+  }
 }

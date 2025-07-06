@@ -9,6 +9,7 @@
           class="btn btn-light-blue"
           data-bs-toggle="modal"
           data-bs-target="#permisoModal"
+          (click)="prepararNuevoPermiso()" 
         >
           <i class="bi bi-plus-circle me-2"></i>Nuevo Permiso
         </button>
@@ -30,10 +31,20 @@
             />
           </div>
         </div>
+        <!-- filtro por estatus -->
+        <div class="col-12 col-md-3">
+          <select class="form-select" [(ngModel)]="filtroEstatus" name="filtroEstatus" (change)="filtrarPermisos()">
+            <option value="Todas">Todos</option>
+            <option value="Pendiente">Pendiente</option>
+            <option value="Aprobado">Aprobado</option>
+            <option value="Denegado">Denegado</option>
+            <option value="NoSolicitado">NoSolicitado</option>
+          </select>
+        </div>
         <!-- Puedes agregar más filtros aquí si lo requieres -->
       </form>
-      <!-- Tabla de permisos -->
-      <div class="table-responsive">
+      <!-- Tabla de permisos activos -->
+      <div class="table-responsive mb-5">
         <table class="table table-bordered table-hover align-middle mb-0">
           <thead class="bg-light-blue text-white">
             <tr>
@@ -47,7 +58,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let permiso of permisosFiltrados">
+            <tr *ngFor="let permiso of permisosActivosFiltrados">
               <td class="d-none d-md-table-cell">{{ permiso.id_permiso }}</td>
               <td>
                 {{ permiso.trabajadores.nombre }}
@@ -64,8 +75,9 @@
               <td>
                 <span class="badge"
                   [ngClass]="{
-                    'bg-success': permiso.estatus === 'Inactiva',
-                    'bg-warning': permiso.estatus === 'Activa',
+                    'bg-success': permiso.estatus === 'Aprobado',
+                    'bg-danger': permiso.estatus === 'Denegado',
+                    'bg-warning': permiso.estatus === 'NoSolicitado',
                     'bg-secondary': permiso.estatus === 'Pendiente'
                   }"
                 >
@@ -198,8 +210,9 @@
                 >
                   <option value="" disabled selected>Seleccionar estatus</option>
                   <option value="Pendiente">Pendiente</option>
-                  <option value="Activa">Activa</option>
-                  <option value="Inactiva">Inactiva</option>
+                  <option value="Aprobado">Aprobado</option>
+                  <option value="Denegado">Denegado</option>
+                  <option value="NoSolicitado">NoSolicitado</option>
                 </select>
               </div>
               <div class="mb-3">
@@ -279,8 +292,9 @@
               <span
                 class="badge"
                 [ngClass]="{
-                  'bg-success': permisoSeleccionado.estatus === 'Inactiva',
-                  'bg-warning': permisoSeleccionado.estatus === 'Activa',
+                  'bg-success': permisoSeleccionado.estatus === 'Aprobado',
+                  'bg-danger': permisoSeleccionado.estatus === 'Denegado',
+                  'bg-warning': permisoSeleccionado.estatus === 'NoSolicitado',
                   'bg-secondary': permisoSeleccionado.estatus === 'Pendiente'
                 }"
               >

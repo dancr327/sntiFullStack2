@@ -126,8 +126,14 @@ const listarPermisos = async (req, res) => {
   }
   try {
     const permisos = await prisma.permisos.findMany({
+      // El listado de permisos del backend ahora devuelve datos de trabajadores y secciones para que los filtros del frontend funcionen correctamente (CAMBIO HECHO POR DANIEL)
       where,
-      include: { documentos: true }
+      include: {
+        documentos: true,
+        trabajadores: {
+          include: { seccion: true }
+        }
+      }
     });
     res.status(200).json({
       success: true,

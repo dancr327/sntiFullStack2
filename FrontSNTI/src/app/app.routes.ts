@@ -1,6 +1,7 @@
 import { Routes, RouterModule } from '@angular/router';
 import { Component, OnInit } from '@angular/core';
 import { roleGuard } from './core/guards/role.guard';
+import { GaleriaComponent } from './components/galeria/galeria.component';
 export const routes: Routes = [
     // otras rutas
     {path: '', // Ruta raíz (por defecto)
@@ -59,5 +60,11 @@ export const routes: Routes = [
     {path: 'contacto', loadComponent: () => import('./components/contacto/contacto.component').then(m => m.ContactoComponent)},
     {path: 'login', loadComponent: () => import('./components/login/login.component').then(m => m.LoginComponent)},
     {path: 'recuperaPassword', loadComponent: () => import('./components/recupera-password/recupera-password.component').then(m => m.RecuperaPasswordComponent)},
+    { path: 'galeria', component: GaleriaComponent, title: 'SNTI - Galería' },
+    {
+  path: 'mas-informacion',
+    loadComponent: () => import('./components/informacion-pdf/informacion-pdf.component').then(m => m.InformacionPdfComponent)
+  }
+
 
 ];

@@ -1,4 +1,4 @@
-import { ApplicationConfig } from '@angular/core';
+import { ApplicationConfig, importProvidersFrom } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { routes } from './app.routes';
@@ -10,6 +10,7 @@ import { provideHttpClient, withInterceptorsFromDi} from '@angular/common/http';
 import { AuthInterceptor } from './core/interceptors/auth.interceptor';
 import { inject as angularInject } from '@angular/core';
 import { HTTP_INTERCEPTORS } from '@angular/common/http';
+import { MatDialogModule } from '@angular/material/dialog';
 export const appConfig: ApplicationConfig = {
   providers: [
     provideRouter(routes), 
@@ -22,6 +23,8 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(
       withInterceptorsFromDi()
     ),
+    importProvidersFrom(MatDialogModule),
+
      {
       provide: HTTP_INTERCEPTORS,
       useClass: AuthInterceptor,

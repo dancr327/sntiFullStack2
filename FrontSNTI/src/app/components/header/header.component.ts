@@ -4,9 +4,6 @@ import { Router } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { CommonModule } from '@angular/common';
 
-
-
-
 @Component({
   selector: 'app-header',
   standalone: true,
@@ -14,12 +11,10 @@ import { CommonModule } from '@angular/common';
   templateUrl: './header.component.html',
   styleUrl: './header.component.css'
 })
-
-
 export class HeaderComponent {
+  constructor(private router: Router, public authService: AuthService) {}
 
-constructor(private router: Router, public authService: AuthService) {}
-goHome() {
+  goHome() {
     if (this.authService.isLoggedIn()) {
       const role = this.authService.getUserRole();
       if (role === 'ADMINISTRADOR') {
@@ -27,7 +22,7 @@ goHome() {
       } else if (role === 'USUARIO') {
         this.router.navigate(['/user']);
       } else {
-        this.router.navigate(['/']); // Por si acaso
+        this.router.navigate(['/']);
       }
     } else {
       this.router.navigate(['/']);

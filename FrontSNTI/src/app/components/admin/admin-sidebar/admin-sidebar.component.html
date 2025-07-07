@@ -46,7 +46,7 @@
     </li>
 
     <!-- apartado de secretarias -->
-    <li class="nav-item mb-2">
+    <!-- <li class="nav-item mb-2">
       <a
         class="nav-link text-white d-flex align-items-center"
         (click)="toggleSecretarias()"
@@ -134,7 +134,7 @@
           </li>
         </ul>
       </div>
-    </li>
+    </li> -->
 
 
     <!-- Administrar Sanciones -->
@@ -156,6 +156,17 @@
       <mat-icon>assignment</mat-icon>
       <span class="menu-text">Permisos</span>
     </li>
+
+    <!-- Administrar hijos -->
+    <li
+      class="menu-item"
+      [routerLink]="['adminhijos']"
+      routerLinkActive="active"
+    >
+      <mat-icon>child_care</mat-icon>
+      <span class="menu-text">Hijos</span>
+    </li>
+
     <!--Administrar secciones  -->
     <li
       class="menu-item"

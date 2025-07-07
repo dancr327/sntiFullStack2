@@ -1,5 +1,6 @@
 
 /* Estilos consistentes con la vista de admin/permisos */
+/* Colores y botones en tono azul para seguir la misma linea que admin */
 .bg-light-blue {
   background-color: #74c0fc !important;
 }
@@ -75,4 +76,15 @@
   .table-responsive {
     font-size: 0.96rem;
   }
+}
+
+/* Estilos para el modal de detalles para igualarlo al de admin */
+#detallePermisoModal .modal-content {
+  font-size: 1.16rem;
+}
+
+#detallePermisoModal .modal-title,
+#detallePermisoModal h6 {
+  font-size: 1.2rem;
+  font-weight: 500;
 }

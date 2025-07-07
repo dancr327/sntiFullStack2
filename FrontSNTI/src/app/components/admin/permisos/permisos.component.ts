@@ -23,10 +23,15 @@ export class PermisosComponent implements OnInit {
   filtroBusqueda: string = '';
   filtroEstatus: string = 'Todas'; // Nuevo filtro para estatus
   permisos: Permiso[] = [];
-  permisosFiltrados: Permiso[] = [];
+  permisosActivos: Permiso[] = [];
+  permisosCaducados: Permiso[] = [];
+  permisosActivosFiltrados: Permiso[] = [];
+  permisosCaducadosFiltrados: Permiso[] = [];
   trabajadores: Trabajador[] = [];
   archivoSeleccionado: File | null = null;
   permisoSeleccionado: Permiso | null = null;
+  permisoEnEdicion: Permiso | null = null;
+  editando: boolean = false;
 
   usuarioActual: Usuario | null = null;
 
@@ -51,6 +56,9 @@ export class PermisosComponent implements OnInit {
     this.cargarTrabajadores();
   }
 
+   prepararNuevoPermiso(): void {
+    this.resetForm();
+  }
 
   cargarTrabajadores(): void {
   this.trabajadoresService.getTrabajadores().subscribe({
@@ -99,26 +107,53 @@ export class PermisosComponent implements OnInit {
           );
         }
         this.permisos = todos;
-        this.permisosFiltrados = [...todos];
+        this.categorizarPermisos();
       },
       error: (err) => {
         this.permisos = [];
-        this.permisosFiltrados = [];
+        this.permisosActivos = [];
+        this.permisosCaducados = [];
+        this.permisosActivosFiltrados = [];
+        this.permisosCaducadosFiltrados = [];
         console.error('Error al obtener permisos:', err);
       },
     });
   }
-
+// Método para categorizar permisos en activos y caducados
+  categorizarPermisos(): void {
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    const ajustar = (fecha: string) => {
+      const d = new Date(fecha);
+      d.setMinutes(d.getMinutes() + d.getTimezoneOffset());
+      return d;
+    };
+    this.permisosActivos = this.permisos.filter(p => {
+      const fin = ajustar(p.fecha_fin);
+      fin.setDate(fin.getDate() + 1);
+      return fin.getTime() > hoy.getTime();
+    });
+    this.permisosCaducados = this.permisos.filter(p => {
+      const fin = ajustar(p.fecha_fin);
+      fin.setDate(fin.getDate() + 1);
+      return fin.getTime() <= hoy.getTime();
+    });
+    this.filtrarPermisos();
+  }
 
    onFileSelected(event: any): void {
     this.archivoSeleccionado = event.target.files[0];
   }
 
   guardarPermiso(): void {
+    if (this.editando) {
+      this.actualizarPermiso();
+      return;
+    }
 
   const inicio = new Date(this.nuevaPermiso.fecha_inicio);
-  const fin = new Date(this.nuevaPermiso.fecha_fin);
-  if (inicio > fin) {
+    const fin = new Date(this.nuevaPermiso.fecha_fin);
+    if (inicio > fin) {
       alert('La fecha de finalizacion no puede ser antes que la fecha de inicio.');
       return;
     }
@@ -135,7 +170,7 @@ export class PermisosComponent implements OnInit {
     formData.append('aprobacion', this.archivoSeleccionado);
 
     this.permisosService.crearPermiso(formData).subscribe({
-      next: (resp: any) => {
+      next: () => {
         this.cargarPermisos();
         this.resetForm();
         // Cierra el modal manualmente si usas Bootstrap JS
@@ -172,6 +207,59 @@ export class PermisosComponent implements OnInit {
       (window as any).bootstrap?.Modal.getOrCreateInstance(modalEl).show();
   }
 
+  editarPermiso(permiso: Permiso): void {
+    this.editando = true;
+    this.permisoEnEdicion = permiso;
+    this.nuevaPermiso = {
+      id_trabajador: permiso.id_trabajador,
+      tipo_permiso: permiso.tipo_permiso,
+      motivo: permiso.motivo,
+      fecha_inicio: permiso.fecha_inicio.substring(0, 10),
+      fecha_fin: permiso.fecha_fin.substring(0, 10),
+      estatus: permiso.estatus,
+    };
+    this.archivoSeleccionado = null;
+    const modalEl = document.getElementById('permisoModal');
+    if (modalEl)
+      (window as any).bootstrap?.Modal.getOrCreateInstance(modalEl).show();
+  }
+
+  actualizarPermiso(): void {
+    if (!this.permisoEnEdicion) return;
+    const inicio = new Date(this.nuevaPermiso.fecha_inicio);
+    const fin = new Date(this.nuevaPermiso.fecha_fin);
+    if (inicio > fin) {
+      alert('La fecha de finalizacion no puede ser antes que la fecha de inicio.');
+      return;
+    }
+
+    const formData = new FormData();
+    Object.entries(this.nuevaPermiso).forEach(([key, value]) => {
+      if (this.editando && key === 'id_trabajador') return;
+      if (value !== undefined && value !== null && value !== '') {
+        formData.append(key, value as string);
+      }
+    });
+    if (this.archivoSeleccionado) {
+      formData.append('aprobacion', this.archivoSeleccionado);
+    }
+
+    this.permisosService.actualizarPermiso(this.permisoEnEdicion.id_permiso, formData).subscribe({
+      next: () => {
+        this.cargarPermisos();
+        this.resetForm();
+        const modalEl = document.getElementById('permisoModal');
+        if (modalEl)
+          (window as any).bootstrap?.Modal.getInstance(modalEl)?.hide();
+        alert('Permiso actualizado correctamente.');
+      },
+      error: (err) => {
+        alert('No se pudo actualizar el permiso. Intenta nuevamente.');
+        console.error(err);
+      },
+    });
+  }
+
   descargarDocumento(permiso: Permiso): void {
   if (!permiso.documentos) {
     alert('No hay documento para descargar.');
@@ -200,18 +288,22 @@ export class PermisosComponent implements OnInit {
 }
 
   filtrarPermisos(): void {
-
-    const termino = this.filtroBusqueda.toLowerCase();
-    this.permisosFiltrados = this.permisos.filter((p) => {
-      const coincideBusqueda = !termino ||
-        `${p.trabajadores.nombre} ${p.trabajadores.apellido_paterno} ${p.trabajadores.apellido_materno}`
-          .toLowerCase().includes(termino) ||
-        (p.tipo_permiso ?? '').toLowerCase().includes(termino) ||
-        p.motivo.toLowerCase().includes(termino) ||
-        (p.estatus ?? '').toLowerCase().includes(termino);
-      const coincideEstatus = this.filtroEstatus === 'Todas' || p.estatus === this.filtroEstatus;
-      return coincideBusqueda && coincideEstatus;
-    });
+const termino = this.filtroBusqueda.toLowerCase();
+    const filtrar = (lista: Permiso[]) =>
+      lista.filter((p) => {
+        const coincideBusqueda =
+          !termino ||
+          `${p.trabajadores.nombre} ${p.trabajadores.apellido_paterno} ${p.trabajadores.apellido_materno}`
+            .toLowerCase()
+            .includes(termino) ||
+          (p.tipo_permiso ?? '').toLowerCase().includes(termino) ||
+          p.motivo.toLowerCase().includes(termino) ||
+          (p.estatus ?? '').toLowerCase().includes(termino);
+        const coincideEstatus = this.filtroEstatus === 'Todas' || p.estatus === this.filtroEstatus;
+        return coincideBusqueda && coincideEstatus;
+      });
+    this.permisosActivosFiltrados = filtrar(this.permisosActivos);
+    this.permisosCaducadosFiltrados = filtrar(this.permisosCaducados);
   }
 // Método para aplicar la fecha mínima de inicio (3 meses atrás)
   get minFechaInicio(): string {
@@ -241,5 +333,7 @@ get fechaFinInvalida(): boolean {
       estatus: 'Pendiente',
     };
     this.archivoSeleccionado = null;
+    this.permisoEnEdicion = null;
+    this.editando = false;
   }
 }

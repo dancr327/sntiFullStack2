@@ -20,6 +20,11 @@ export class PermisosService {
   eliminarPermiso(id: number) {
     return this.http.delete(`${this.apiUrl}/${id}`);
   }
+
+  actualizarPermiso(id: number, formData: FormData) {
+    return this.http.patch(`${this.apiUrl}/${id}`, formData);
+  }
+
   // Método para obtener los permisos del usuario autenticado
   getMisPermisos(): Observable<{ success: boolean; data: Permiso[] }> {
     return this.http.get<{ success: boolean; data: Permiso[] }>(this.apiUrl); //cambio hecho para que vuelva a funcionar el listado de permisos del usuario autenticado
@@ -28,6 +33,6 @@ export class PermisosService {
   descargarDocumento(id_permiso: number) {
     return this.http.get(`${this.apiUrl}/${id_permiso}/descargar-aprobacion`, {
       responseType: 'blob'
-    }); 
+    });
   }
 }

@@ -11,7 +11,7 @@
               <thead class="bg-light-blue text-white">
                 <tr>
                   <th>Tipo</th>
-                  <th>Motivo</th>
+                  <!-- <th>Motivo</th> -->
                   <th>Inicio</th>
                   <th>Fin</th>
                   <th>Estatus</th>
@@ -21,7 +21,7 @@
               <tbody>
                 <tr *ngFor="let permiso of permisosActivos">
                   <td>{{ permiso.tipo_permiso }}</td>
-                  <td>{{ permiso.motivo }}</td>
+                  <!-- <td>{{ permiso.motivo }}</td> -->
                   <td>{{ permiso.fecha_inicio | date : "dd/MM/yyyy":"UTC" }}</td>
                   <td>{{ permiso.fecha_fin | date : "dd/MM/yyyy":"UTC" }}</td>
                   <td>
@@ -42,13 +42,13 @@
                       <button class="btn btn-light-blue me-2" (click)="verDetalles(permiso)" data-bs-toggle="modal" data-bs-target="#detallePermisoModal">
                         <span class="material-icons">visibility</span>
                       </button>
-                      <button
+                      <!-- <button
                         *ngIf="permiso.documentos"
                         class="btn btn-light-blue"
                         (click)="descargarDocumento(permiso)"
                       >
                         <span class="material-icons">download</span>
-                      </button>
+                      </button> -->
                     </div>
                   </td>
                 </tr>
@@ -67,7 +67,7 @@
               <thead class="bg-light-blue text-white">
                 <tr>
                   <th>Tipo</th>
-                  <th>Motivo</th>
+                  <!-- <th>Motivo</th> -->
                   <th>Inicio</th>
                   <th>Fin</th>
                   <th>Estatus</th>
@@ -80,7 +80,7 @@
                   class="table-danger"
                 >
                   <td>{{ permiso.tipo_permiso }}</td>
-                  <td>{{ permiso.motivo }}</td>
+                  <!-- <td>{{ permiso.motivo }}</td> -->
                   <td>{{ permiso.fecha_inicio | date : "dd/MM/yyyy":"UTC" }}</td>
                   <td>{{ permiso.fecha_fin | date : "dd/MM/yyyy":"UTC" }}</td>
                   <td>
@@ -101,13 +101,13 @@
                       <button class="btn btn-light-blue me-2" (click)="verDetalles(permiso)" data-bs-toggle="modal" data-bs-target="#detallePermisoModal">
                         <span class="material-icons">visibility</span>
                       </button>
-                      <button
+                      <!-- <button
                         *ngIf="permiso.documentos"
                         class="btn btn-light-blue"
                         (click)="descargarDocumento(permiso)"
                       >
                         <span class="material-icons">download</span>
-                      </button>
+                      </button> -->
                     </div>
                   </td>
                 </tr>
@@ -144,31 +144,25 @@
             <p>{{ permisoSeleccionado.motivo }}</p>
           </div>
           <div class="row mb-3">
-            <div class="col-md-6">
+            <div class="col">
               <h6>Fecha Inicio:</h6>
-              <p>{{ permisoSeleccionado.fecha_inicio | date : 'dd/MM/yyyy' }}</p>
+              <p>{{ permisoSeleccionado.fecha_inicio | date : 'dd/MM/yyyy' : 'UTC' }}</p>
             </div>
-            <div class="col-md-6">
+            <div class="col">
               <h6>Fecha Fin:</h6>
-              <p>{{ permisoSeleccionado.fecha_fin | date : 'dd/MM/yyyy' }}</p>
+              <p>{{ permisoSeleccionado.fecha_fin | date : 'dd/MM/yyyy' : 'UTC' }}</p>
             </div>
           </div>
           <div class="mb-3">
             <h6>Estatus:</h6>
-            <span class="badge"
-              [ngClass]="{
-                'bg-success': permisoSeleccionado.estatus === 'Aprobado',
-                'bg-danger': permisoSeleccionado.estatus === 'Denegado',
-                'bg-warning': permisoSeleccionado.estatus === 'NoSolicitado',
-                'bg-secondary': permisoSeleccionado.estatus === 'Pendiente'
-              }">
+            <span class="badge" [ngClass]="{ 'bg-success': permisoSeleccionado.estatus === 'Aprobado', 'bg-danger': permisoSeleccionado.estatus === 'Denegado', 'bg-warning': permisoSeleccionado.estatus === 'NoSolicitado', 'bg-secondary': permisoSeleccionado.estatus === 'Pendiente' }">
               {{ permisoSeleccionado.estatus }}
             </span>
           </div>
           <div class="mb-3">
             <h6>Documento:</h6>
             <ng-container *ngIf="permisoSeleccionado.documentos">
-              <a (click)="descargarDocumento(permisoSeleccionado)" class="btn btn-sm btn-light-blue">
+              <a (click)="descargarDocumento(permisoSeleccionado)" class="btn btn-light-blue btn-sm">
                 <i class="bi bi-download me-2"></i>
                 {{ permisoSeleccionado.documentos.nombre_archivo || 'Descargar' }}
               </a>

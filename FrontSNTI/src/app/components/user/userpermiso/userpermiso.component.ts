@@ -38,9 +38,23 @@ export class UserpermisoComponent implements OnInit {
     });
   }
   categorizarPermisos(): void {
-    const hoy = new Date().setHours(0, 0, 0, 0);
-    this.permisosActivos = this.permisos.filter(p => new Date(p.fecha_fin).getTime() >= hoy);
-    this.permisosCaducados = this.permisos.filter(p => new Date(p.fecha_fin).getTime() < hoy);
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    const ajustar = (fecha: string) => {
+      const d = new Date(fecha);
+      d.setMinutes(d.getMinutes() + d.getTimezoneOffset());
+      return d;
+    };
+    this.permisosActivos = this.permisos.filter(p => {
+      const fin = ajustar(p.fecha_fin);
+      fin.setDate(fin.getDate() + 1);
+      return fin.getTime() > hoy.getTime();
+    });
+    this.permisosCaducados = this.permisos.filter(p => {
+      const fin = ajustar(p.fecha_fin);
+      fin.setDate(fin.getDate() + 1);
+      return fin.getTime() <= hoy.getTime();
+    });
   }
 
    verDetalles(permiso: Permiso): void {

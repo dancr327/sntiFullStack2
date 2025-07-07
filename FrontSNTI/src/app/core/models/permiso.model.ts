@@ -1,6 +1,7 @@
 // core/models/permiso.model.ts
 export interface Permiso {
   id_permiso: number;
+  id_trabajador: number;
   tipo_permiso: string;
   motivo: string;
   fecha_inicio: string;

@@ -62,6 +62,19 @@
 .modal-header {
   border-radius: 0.5rem 0.5rem 0 0;
 }
+/* diseño modal como en admin */
+#detalleSancionModal .modal-content {
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.06);
+  border: none;
+  font-size: 1.16rem;
+}
+
+#detalleSancionModal .modal-title,
+#detalleSancionModal h6 {
+  font-size: 1.2rem;
+  font-weight: 500;
+}
 
 /* Responsivo */
 @media (max-width: 768px) {

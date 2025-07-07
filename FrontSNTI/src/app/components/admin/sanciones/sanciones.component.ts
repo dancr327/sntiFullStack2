@@ -20,6 +20,7 @@ import { Usuario } from '../../../core/models/usuario.model';
 })
 export class SancionesComponent implements OnInit {
   filtroBusqueda: string = '';
+  filtroEstatus: string = 'Todas';
   sanciones: Sancion[] = [];
   sancionesFiltradas: Sancion[] = [];
   sancionesVencidas: Sancion[] = [];

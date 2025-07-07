@@ -22,8 +22,10 @@ export class SancionesComponent implements OnInit {
   filtroBusqueda: string = '';
   filtroEstatus: string = 'Todas';
   sanciones: Sancion[] = [];
-  sancionesFiltradas: Sancion[] = [];
+  sancionesActivas: Sancion[] = [];
   sancionesVencidas: Sancion[] = [];
+  sancionesActivasFiltradas: Sancion[] = [];
+  sancionesVencidasFiltradas: Sancion[] = [];
   trabajadores: Trabajador[] = [];
   sancionSeleccionada: Sancion | null = null;
 
@@ -76,19 +78,44 @@ export class SancionesComponent implements OnInit {
     this.sancionesService.getSanciones().subscribe({
       next: (resp) => {
         this.sanciones = resp.data || [];
-        this.sancionesFiltradas = [...this.sanciones];
-        const hoy = new Date();
-        this.sancionesVencidas = this.sanciones.filter(
-          (s) => s.fecha_fin && new Date(s.fecha_fin) < hoy
-        );
+        this.categorizarSanciones();
       },
       error: () => {
         this.sanciones = [];
-        this.sancionesFiltradas = [];
+        this.sancionesActivas = [];
         this.sancionesVencidas = [];
+        this.sancionesActivasFiltradas = [];
+        this.sancionesVencidasFiltradas = [];
       }
     });
   }
+
+   categorizarSanciones(): void {
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    const ajustar = (fecha: string) => {
+      const d = new Date(fecha);
+      d.setMinutes(d.getMinutes() + d.getTimezoneOffset());
+      return d;
+    };
+
+    this.sancionesActivas = this.sanciones.filter(s => {
+      if (!s.fecha_fin) return true;
+      const fin = ajustar(s.fecha_fin);
+      fin.setDate(fin.getDate() + 1);
+      return fin.getTime() > hoy.getTime();
+    });
+
+    this.sancionesVencidas = this.sanciones.filter(s => {
+      if (!s.fecha_fin) return false;
+      const fin = ajustar(s.fecha_fin);
+      fin.setDate(fin.getDate() + 1);
+      return fin.getTime() <= hoy.getTime();
+    });
+
+    this.filtrarSanciones();
+  }
+
 
   guardarSancion(): void {
     const inicio = new Date(this.nuevaSancion.fecha_aplicacion);
@@ -133,19 +160,23 @@ export class SancionesComponent implements OnInit {
   }
 
   filtrarSanciones(): void {
-    if (!this.filtroBusqueda) {
-      this.sancionesFiltradas = [...this.sanciones];
-      return;
-    }
     const termino = this.filtroBusqueda.toLowerCase();
-    this.sancionesFiltradas = this.sanciones.filter((s) =>
-      `${s.trabajadores.nombre} ${s.trabajadores.apellido_paterno} ${s.trabajadores.apellido_materno || ''}`
-        .toLowerCase()
-        .includes(termino) ||
-      (s.tipo_sancion ?? '').toLowerCase().includes(termino) ||
-      s.descripcion.toLowerCase().includes(termino) ||
-      (s.estatus ?? '').toLowerCase().includes(termino)
-    );
+      const filtrar = (lista: Sancion[]) =>
+      lista.filter((s) => {
+        const coincideBusqueda =
+          !termino ||
+          `${s.trabajadores.nombre} ${s.trabajadores.apellido_paterno} ${s.trabajadores.apellido_materno || ''}`
+            .toLowerCase()
+            .includes(termino) ||
+          (s.tipo_sancion ?? '').toLowerCase().includes(termino) ||
+          s.descripcion.toLowerCase().includes(termino) ||
+          (s.estatus ?? '').toLowerCase().includes(termino);
+        const coincideEstatus = this.filtroEstatus === 'Todas' || s.estatus === this.filtroEstatus;
+        return coincideBusqueda && coincideEstatus;
+      });
+
+    this.sancionesActivasFiltradas = filtrar(this.sancionesActivas);
+    this.sancionesVencidasFiltradas = filtrar(this.sancionesVencidas);
   }
 
   get minFechaAplicacion(): string {

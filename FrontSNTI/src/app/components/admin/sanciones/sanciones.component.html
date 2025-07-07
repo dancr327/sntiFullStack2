@@ -29,6 +29,19 @@
             />
           </div>
         </div>
+        <div class="col-12 col-md-3">
+          <select
+            class="form-select"
+            [(ngModel)]="filtroEstatus"
+            name="filtroEstatus"
+            (change)="filtrarSanciones()"
+          >
+            <option value="Todas">Todos</option>
+            <option value="Activa">Activa</option>
+            <option value="Inactiva">Inactiva</option>
+            <option value="Pendiente">Pendiente</option>
+          </select>
+        </div>
       </form>
       <div class="table-responsive">
         <table class="table table-bordered table-hover align-middle mb-0">
@@ -44,7 +57,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let sancion of sancionesFiltradas">
+            <tr *ngFor="let sancion of sancionesActivasFiltradas">
               <td class="d-none d-md-table-cell">{{ sancion.id_sancion }}</td>
               <td>
                 <div class="d-flex flex-column">
@@ -87,34 +100,71 @@
                 </div>
               </td>
             </tr>
-            <tr *ngIf="sancionesFiltradas.length === 0">
+            <tr *ngIf="sancionesActivasFiltradas.length === 0">
               <td colspan="7" class="text-center">No se encontraron sanciones</td>
             </tr>
           </tbody>
         </table>
       </div>
-    </div>
-  </div>
-
-  <div class="card mt-3">
-    <div class="card-header bg-light-blue text-white">
-      <h5 class="mb-2 mb-md-0">Sanciones con fecha vencida</h5>
-    </div>
-    <div class="card-body p-0">
-      <ul class="list-group list-group-flush">
-        <li class="list-group-item" *ngFor="let s of sancionesVencidas">
-          <div class="d-flex justify-content-between">
-            <span>
-              {{ s.trabajadores.nombre }} {{ s.trabajadores.apellido_paterno }} {{ s.trabajadores.apellido_materno }} -
-              {{ s.tipo_sancion }}
-            </span>
-            <small>{{ s.fecha_fin | date : 'dd/MM/yyyy':'UTC' }}</small>
-          </div>
-        </li>
-        <li class="list-group-item text-center" *ngIf="sancionesVencidas.length === 0">
-          No hay sanciones vencidas
-        </li>
-      </ul>
+<h5 class="mb-3 subtitle">Sanciones Caducadas</h5>
+      <div class="table-responsive">
+        <table class="table table-bordered table-hover align-middle mb-0">
+          <thead class="bg-light-blue text-white">
+            <tr>
+              <th class="d-none d-md-table-cell">ID</th>
+              <th>Trabajador</th>
+              <th class="d-none d-sm-table-cell">Tipo</th>
+              <th class="d-none d-lg-table-cell">Fecha Aplicación</th>
+              <th class="d-none d-lg-table-cell">Fecha Fin</th>
+              <th>Estatus</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let sancion of sancionesVencidasFiltradas" class="table-danger">
+              <td class="d-none d-md-table-cell">{{ sancion.id_sancion }}</td>
+              <td>
+                {{ sancion.trabajadores.nombre }} {{ sancion.trabajadores.apellido_paterno }} {{ sancion.trabajadores.apellido_materno }}
+              </td>
+              <td class="d-none d-sm-table-cell">{{ sancion.tipo_sancion }}</td>
+              <td class="d-none d-lg-table-cell">
+                {{ sancion.fecha_aplicacion | date : 'dd/MM/yyyy' : 'UTC' }}
+              </td>
+              <td class="d-none d-lg-table-cell">
+                {{ sancion.fecha_fin | date : 'dd/MM/yyyy' : 'UTC' }}
+              </td>
+              <td>
+                <span class="badge"
+                  [ngClass]="{
+                    'bg-success': sancion.estatus === 'Activa',
+                    'bg-warning': sancion.estatus === 'Inactiva',
+                    'bg-secondary': sancion.estatus === 'Pendiente'
+                  }">
+                  {{ sancion.estatus }}
+                </span>
+              </td>
+              <td>
+                <div class="d-flex">
+                  <button
+                    class="btn btn-sm btn-light-blue me-2"
+                    (click)="verDetalles(sancion)"
+                    title="Ver detalles"
+                    data-bs-toggle="modal"
+                    data-bs-target="#detalleModal">
+                    <span class="material-icons">visibility</span>
+                  </button>
+                  <button class="btn btn-sm btn-danger" (click)="eliminarSancion(sancion.id_sancion)" title="Eliminar">
+                    <span class="material-icons">delete</span>
+                  </button>
+                </div>
+              </td>
+            </tr>
+            <tr *ngIf="sancionesVencidasFiltradas.length === 0">
+              <td colspan="7" class="text-center">No se encontraron sanciones</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 

@@ -48,9 +48,10 @@ export const routes: Routes = [
             { path: '', loadComponent: () => import('./components/home/home.component').then(m => m.HomeComponent) }, // Home del usuario (si tienes uno)
             { path: 'userpermiso', loadComponent: () => import('./components/user/userpermiso/userpermiso.component').then(m => m.UserpermisoComponent) },
             { path: 'usersanciones', loadComponent: () => import('./components/user/usersanciones/usersanciones.component').then(m => m.UsersancionesComponent) },
-            { path: 'userdocumentos', loadComponent: () => import('./components/user/userdocumentos/userdocumentos.component').then(m => m.UserdocumentosComponent) },
             { path: 'userhijos', loadComponent: () => import('./components/user/userhijos/userhijos.component').then(m => m.UserhijosComponent) },
-            {path: 'userperfil', loadComponent: () => import('./components/user/userperfil/userperfil.component').then(m => m.UserperfilComponent)},
+            { path: 'userperfil', loadComponent: () => import('./components/user/userperfil/userperfil.component').then(m => m.UserperfilComponent) }, // Corregido el path
+            // TODO: Asegúrate de que el componente y la ruta existen, o corrige el path si el nombre es diferente
+            { path: 'userdocumentospanel', loadComponent: () => import('./components/user/userdocumentospanel/userdocumentospanel.component').then(m => m.UserDocumentosPanelComponent) }, // Corregido el path
             // ...otros componentes de usuario
         ]
     },

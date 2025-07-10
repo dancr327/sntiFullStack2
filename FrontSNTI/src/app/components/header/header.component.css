@@ -114,4 +114,8 @@ padding: 7px 2vw;
 height: 50px;
 }
 }
-
+.navbar-nav .nav-link:hover,
+.navbar-nav .nav-link.active {
+  color: var(--blanco);
+  transform: translateY(-2px);
+}

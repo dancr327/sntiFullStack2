@@ -13,7 +13,7 @@ export interface Permiso {
     apellido_materno: string;
     identificador: string;
     id_seccion: number;
-    seccion?: {         // 👈 OBLIGATORIO para que funcione el filtro
+    seccion?: {         
       id_seccion: number;
       estado: string;
       numero_seccion: number;

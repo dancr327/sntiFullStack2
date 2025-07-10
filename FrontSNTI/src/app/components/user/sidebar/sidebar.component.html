@@ -48,9 +48,13 @@
         <mat-icon>face</mat-icon>
         <span class="menu-text">Mis Hijos</span>
       </li>
-    </ul>
-
     
+
+    <li class = "menu-item" [routerLink]="['/mis-docuementos']" routerLinkActive="active">
+      <mat-icon>face</mat-icon>
+      <span class="menu-text">Panel Documentos</span>
+    </li>
+    </ul>
 
     <!-- Cerrar Sesión -->
     <div class="logout menu-item" (click)="logout()">

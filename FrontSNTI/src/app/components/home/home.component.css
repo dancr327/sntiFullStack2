@@ -32,6 +32,23 @@
   height: 80vh; /* Altura considerable para impacto visual */
   min-height: 500px;
   padding: 0 1.5rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-bg {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-image: url('/assets/images/snti-equipo-trabajo.jpg');
+  background-size: cover;
+  background-position: center;
+  opacity: 0.3;
+  z-index: 1;
+}
+
+.hero-section .container {
+  position: relative;
+  z-index: 2;
 }
 
 .hero-title {

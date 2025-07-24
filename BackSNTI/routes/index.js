@@ -17,6 +17,7 @@ const contactosRoutes = require('./contactosRoutes');
 const galeriaRoutes = require('./galeriaRoutes'); // Asegúrate de que este enrutador esté correctamente definidoAdd
 const cursosRoutes = require('./cursosRoutes'); // Asegúrate de que este enrutador esté correctamente definido
 const trabajadoresCursosRoutes = require('./trabajadoresCursosRoutes'); // Asegúrate de que este enrutador esté correctamente definido
+const documentosPublicosRoutes = require('./documentosPublicosRoutes'); // Asegúrate de que este enrutador esté correctamente definido
 
 // Rutas que requieren autenticación por defecto (aplican verifyToken y hasRole)
 // Nota: El middleware hasRole, si no se le pasan roles, debe manejarlo internamente
@@ -41,14 +42,15 @@ router.use('/trabajadoresCursos', authMiddleware.verifyToken, authorizationMiddl
 // ESE middleware debe estar definido DENTRO de authRoutes.js para esa ruta específica.
 router.use('/auth', authRoutes); // ¡Sin middleware de token aquí!
 
+router.use('/documentos-publicos', documentosPublicosRoutes); // Esta ruta no requiere autenticación, así que no lleva middleware de token
 
 // Ruta base para verificar que la API funcione
-router.get('/', (req, res) => {
-    res.json({
-        success: true,
-        message: 'API funcionando correctamente',
-        version: '1.0.0'
-    });
-});
+// router.get('/', (req, res) => {
+//     res.json({
+//         success: true,
+//         message: 'API funcionando correctamente',
+//         version: '1.0.0'
+//     });
+// });
 
 module.exports = router;

@@ -23,6 +23,7 @@ export const routes: Routes = [
                 {path: 'editar-trabajador/:id', loadComponent: () => import('./components/admin/registro-empleado/registro-empleado.component').then(m => m.RegistroEmpleadoComponent)},
 
     {path: 'adminsanciones', loadComponent: () => import('./components/admin/sanciones/sanciones.component').then(m => m.SancionesComponent)},
+    {path: 'admincursos', loadComponent: () => import('./components/admin/cursos/cursos.component').then(m => m.CursosComponent)},
     {path: 'adminpermisos', loadComponent: () => import('./components/admin/permisos/permisos.component').then(m => m.PermisosComponent)},
     {path: 'adminhijos', loadComponent: () => import('./components/admin/hijos/hijos.component').then(m => m.HijosComponent)},
     {path: 'adminsecciones', loadComponent: () => import('./components/admin/secciones-sindicales/secciones-sindicales.component').then(m => m.SeccionesSindicalesComponent)},
@@ -50,6 +51,7 @@ export const routes: Routes = [
             { path: 'usersanciones', loadComponent: () => import('./components/user/usersanciones/usersanciones.component').then(m => m.UsersancionesComponent) },
             { path: 'userdocumentos', loadComponent: () => import('./components/user/userdocumentos/userdocumentos.component').then(m => m.UserdocumentosComponent) },
             { path: 'userhijos', loadComponent: () => import('./components/user/userhijos/userhijos.component').then(m => m.UserhijosComponent) },
+            { path: 'usercursos', loadComponent: () => import('./components/user/usercursos/usercursos.component').then(m => m.UsercursosComponent) },
             {path: 'userperfil', loadComponent: () => import('./components/user/userperfil/userperfil.component').then(m => m.UserperfilComponent)},
             // ...otros componentes de usuario
         ]

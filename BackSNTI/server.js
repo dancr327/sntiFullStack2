@@ -8,6 +8,11 @@ const swaggerJsDoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
 const { PrismaClient } = require('@prisma/client');
 const { errorHandler } = require('./middleware');
+const path = require('path');
+const fs = require('fs');
+
+const publicPdfOnly = require('./middleware/publicPdfOnly');
+const publicPdfsPath = path.join(__dirname, 'uploads/publicpdfs');
 
 const indexRoutes = require('./routes'); // Aquí están agrupadas yaa
 
@@ -20,6 +25,7 @@ const permisosRoutes = require('./routes/permisosRoutes'); // Ajusta la ruta si 
 const contactosRoutes = require('./routes/contactosRoutes'); 
 const cursosRoutes = require('./routes/cursosRoutes'); // Ajusta la ruta si es necesarioAdd commentMore actions
 const trabajadoresCursosRoutes = require('./routes/trabajadoresCursosRoutes'); // Ajusta la ruta si es necesario
+const documentosPublicosRoutes = require('./routes/documentosPublicosRoutes'); // Ajusta la ruta si es necesario
 const galeriaRoutes = require('./routes/galeriaRoutes'); // Ajusta la ruta si es necesario
 
 
@@ -89,6 +95,7 @@ app.use ('/contactos', contactosRoutes); // Monta el enrutador con el prefijo /a
 app.use('/galeria', galeriaRoutes); // Monta el enrutador con el prefijo /api/galeria
 app.use('/trabajadores-cursos', trabajadoresCursosRoutes); // Monta el enrutador con el prefijo /api/trabajadores-cursosAdd commentMore actions
 app.use('/cursos', cursosRoutes); // Monta el enrutador con el prefijo /api/cursos
+app.use('/publicpdfs', documentosPublicosRoutes); // Monta el enrutador con el prefijo /api/documentos-publicos
 
 // Ruta base (opcional, si es necesario)
 app.get('/', (req, res) => {
@@ -119,6 +126,14 @@ app.listen(PORT, async () => {
     process.exit(1);
   }
 });
+
+// Asegurar que la carpeta exista
+if (!fs.existsSync(publicPdfsPath)) {
+  fs.mkdirSync(publicPdfsPath, { recursive: true });
+}
+
+// Exponer carpeta solo para PDFs públicos con el middleware robusto
+app.use('/publicpdfs', publicPdfOnly, express.static(publicPdfsPath));
 
 // Manejar cierre limpio
 process.on('SIGINT', async () => {

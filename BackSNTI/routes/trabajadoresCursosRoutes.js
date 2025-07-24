@@ -3,9 +3,11 @@ const router = express.Router();
 const { param, body } = require('express-validator');
 const {
   validarInscripcion,
+  validarInscripcionAdmin,
   validarSubidaDocumento,
   validarAdminUpdate,
   crearInscripcion,
+  crearInscripcionAdmin,
   subirDocumentoInscripcion,
   listarInscripciones,
   misInscripciones,
@@ -149,6 +151,16 @@ router.post(
   uploadCursoTrabajadorDocumento.single('documento'),
   validarInscripcion,
   crearInscripcion
+);
+
+// Endpoint para que un administrador inscriba a un trabajador
+router.post(
+  '/admin',
+  verifyToken,
+  hasRole([Roles.ADMINISTRADOR]),
+  uploadCursoTrabajadorDocumento.single('documento'),
+  validarInscripcionAdmin,
+  crearInscripcionAdmin
 );
 
 /**

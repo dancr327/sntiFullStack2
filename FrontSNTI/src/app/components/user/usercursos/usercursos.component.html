@@ -1,0 +1,28 @@
+<div class="container mt-4">
+  <div class="card shadow">
+    <div class="card-header bg-light-blue text-white">
+      <h4 class="mb-0">Mis Cursos</h4>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead class="bg-light-blue text-white">
+            <tr>
+              <th>Curso</th>
+              <th>Calificación</th>
+              <th>Completado</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let i of inscripciones">
+              <td>{{i.cursos?.nombre_curso}}</td>
+              <td>{{i.calificacion || 'N/A'}}</td>
+              <td>{{i.completado ? 'Sí' : 'No'}}</td>
+            </tr>
+            <tr *ngIf="inscripciones.length===0"><td colspan="3" class="text-center">Sin cursos</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

@@ -280,6 +280,32 @@ const eliminarCurso = async (req, res) => {
     res.status(500).json({ success: false, message: 'Error al eliminar curso.', error: error.message });
   }
 };
+
+/**
+ * @desc Eliminar curso solicitando contraseña del administrador
+ */
+const eliminarCursoConPassword = async (req, res) => {
+  const { id } = req.params;
+  const { password } = req.body;
+  if (!password) {
+    return res.status(400).json({ success: false, message: 'Contraseña requerida.' });
+  }
+  try {
+    const admin = await prisma.trabajadores.findUnique({ where: { id_trabajador: req.user.id } });
+    if (!admin) {
+      return res.status(404).json({ success: false, message: 'Administrador no encontrado.' });
+    }
+    const bcrypt = require('bcrypt');
+    const valid = await bcrypt.compare(password, admin.password_hash);
+    if (!valid) {
+      return res.status(401).json({ success: false, message: 'Contraseña incorrecta.' });
+    }
+    // Reutilizar la lógica de eliminación existente
+    return eliminarCurso(req, res);
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Error al eliminar curso.', error: error.message });
+  }
+};
 //           DESCARGAS\\\
 
 
@@ -331,6 +357,7 @@ module.exports = {
   getCursoById,
   actualizarCurso,
   eliminarCurso,
+  eliminarCursoConPassword,
   descargarConstanciaCurso
 
 };

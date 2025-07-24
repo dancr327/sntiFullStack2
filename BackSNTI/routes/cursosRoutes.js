@@ -1,13 +1,14 @@
 const express = require('express');
 const router = express.Router();
-const { param } = require('express-validator');
+const { param, body } = require('express-validator');
 const {
   validarCurso,
   crearCurso,
   getAllCursos,
   getCursoById,
   actualizarCurso,
-  eliminarCurso
+  eliminarCurso,
+  eliminarCursoConPassword
 } = require('../controllers/cursosController');
 const { uploadCursoConstancia } = require('../config/multerCursos');
 const { verifyToken } = require('../middleware/auth');
@@ -349,6 +350,14 @@ router.delete(
   eliminarCurso
 );
 
+// Eliminación de curso solicitando contraseña del administrador
+router.delete(
+  '/:id/con-password',
+  verifyToken,
+  hasRole([Roles.ADMINISTRADOR]),
+  [param('id').isInt().withMessage('ID debe ser entero').toInt(), body('password').isString()],
+  eliminarCursoConPassword
+);
 
 /**
  * @swagger

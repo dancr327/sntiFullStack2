@@ -37,6 +37,14 @@ const validarInscripcion = [
     .isIn([TipoDocumento.INVITACION_CURSO]).withMessage('Solo puedes subir la invitación al inscribirte.')
 ];
 
+// Validación adicional para inscripciones creadas por un administrador
+const validarInscripcionAdmin = [
+  body('id_trabajador')
+    .notEmpty().withMessage('El id_trabajador es obligatorio.')
+    .isInt().withMessage('Debe ser número entero.'),
+  ...validarInscripcion
+];
+
 const validarSubidaDocumento = [
   param('id').isInt().withMessage('ID de inscripción debe ser entero.'),
   body('tipo_documento')
@@ -140,6 +148,102 @@ const crearInscripcion = async (req, res) => {
     res.status(500).json({ success: false, message: 'Error al crear inscripción.', error: error.message });
   }
 };
+
+/**
+ * @desc Inscribir trabajador (ADMIN) y subir invitación
+ */
+const crearInscripcionAdmin = async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    if (req.file) await safeUnlink(req.file.path);
+    return res.status(400).json({ success: false, message: 'Datos inválidos', errors: errors.array() });
+  }
+  if (!req.file) {
+    return res.status(400).json({ success: false, message: 'El archivo de invitación es obligatorio.' });
+  }
+
+  const { id_trabajador, id_curso, tipo_documento } = req.body;
+  const { originalname, path: filePath, size, mimetype } = req.file;
+
+  // Validar inscripción existente
+  const existe = await prisma.trabajadores_cursos.findUnique({
+    where: {
+      trabajadores_cursos_unique: {
+        id_trabajador: parseInt(id_trabajador),
+        id_curso: parseInt(id_curso)
+      }
+    }
+  });
+  if (existe) {
+    await safeUnlink(filePath);
+    return res.status(409).json({ success: false, message: 'El trabajador ya está inscrito en este curso.' });
+  }
+
+  // Validar que el curso exista
+  const curso = await prisma.cursos.findUnique({ where: { id_curso: parseInt(id_curso) } });
+  if (!curso) {
+    await safeUnlink(filePath);
+    return res.status(404).json({ success: false, message: 'Curso no encontrado.' });
+  }
+
+  // Validar que el trabajador exista
+  const trabajador = await prisma.trabajadores.findUnique({ where: { id_trabajador: parseInt(id_trabajador) } });
+  if (!trabajador) {
+    await safeUnlink(filePath);
+    return res.status(404).json({ success: false, message: 'Trabajador no encontrado.' });
+  }
+
+  // Hash del archivo
+  let hash_archivo;
+  try {
+    const buffer = await fs.readFile(filePath);
+    hash_archivo = crypto.createHash('sha256').update(buffer).digest('hex');
+  } catch {
+    await safeUnlink(filePath);
+    return res.status(500).json({ success: false, message: 'No se pudo calcular hash del archivo.' });
+  }
+
+  try {
+    const result = await prisma.$transaction(async (tx) => {
+      const doc = await tx.documentos.create({
+        data: {
+          id_trabajador: parseInt(id_trabajador),
+          tipo_documento,
+          nombre_archivo: originalname,
+          descripcion: `Invitación al curso ${curso.nombre_curso}`,
+          hash_archivo,
+          ruta_almacenamiento: path.relative(path.join(__dirname, '..'), filePath).replace(/\\/g, '/'),
+          tamano_bytes: BigInt(size),
+          mimetype,
+          es_publico: false
+        }
+      });
+      const inscripcion = await tx.trabajadores_cursos.create({
+        data: {
+          id_trabajador: parseInt(id_trabajador),
+          id_curso: parseInt(id_curso),
+          documento_invitacion_id: doc.id_documento
+        },
+        include: {
+          documentoInvitacion: true,
+          cursos: true,
+          trabajadores: { select: { nombre: true, apellido_paterno: true, apellido_materno: true, identificador: true } }
+        }
+      });
+      return { inscripcion, doc };
+    });
+
+    res.status(201).json({
+      success: true,
+      message: 'Inscripción creada correctamente.',
+      data: sanitizeBigInt(result)
+    });
+  } catch (error) {
+    if (req.file) await safeUnlink(filePath);
+    res.status(500).json({ success: false, message: 'Error al crear inscripción.', error: error.message });
+  }
+};
+
 
 /**
  * @desc Subir conclusión o certificado (PATCH). Solo una vez, no sobrescribe.
@@ -428,9 +532,11 @@ const actualizarInscripcionAdmin = async (req, res) => {
 // --- EXPORTAR ---
 module.exports = {
   validarInscripcion,
+  validarInscripcionAdmin,
   validarSubidaDocumento,
   validarAdminUpdate,
   crearInscripcion,
+  crearInscripcionAdmin,
   subirDocumentoInscripcion,
   listarInscripciones,
   misInscripciones,

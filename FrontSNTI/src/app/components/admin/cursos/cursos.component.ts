@@ -4,9 +4,12 @@ import { FormsModule } from '@angular/forms';
 import { CursosService } from '../../../core/services/cursos.service';
 import { TrabajadoresCursosService } from '../../../core/services/trabajadores-cursos.service';
 import { TrabajadoresService } from '../../../core/services/trabajadores.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { Curso } from '../../../core/models/curso.model';
 import { Trabajador } from '../../../core/models/trabajador.model';
 import { TrabajadorCurso } from '../../../core/models/trabajador-curso.model';
+import { Usuario } from '../../../core/models/usuario.model';
+import { forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-cursos',
@@ -21,19 +24,30 @@ export class CursosComponent implements OnInit {
   inscripciones: TrabajadorCurso[] = [];
 
   cursoSeleccionado: Curso | null = null;
+  inscripcionEditar: TrabajadorCurso | null = null;
+  editCalificacion = '';
+  editCompletado = false;
+  docTipo: 'CONCLUSION_CURSO' | 'CERTIFICADO_CURSO' = 'CONCLUSION_CURSO';
+  docArchivo: File | null = null;
   filtroBusqueda = '';
   filtroSeccion = '';
-  trabajadorAgregar: number | '' = '';
-   nuevoCurso = { codigo_curso: '', nombre_curso: '', horas_duracion: 1 };
+  trabajadoresAgregar: number[] = [];
+  archivoInvitacion: File | null = null;
+
+  usuarioActual: Usuario | null = null;
+
+  nuevoCurso = { codigo_curso: '', nombre_curso: '', horas_duracion: 1 };
   archivoConstancia: File | null = null;
 
   constructor(
     private cursosService: CursosService,
     private trabajadoresCursosService: TrabajadoresCursosService,
-    private trabajadoresService: TrabajadoresService
+    private trabajadoresService: TrabajadoresService,
+    private authService: AuthService
   ) {}
 
-  ngOnInit(): void {
+   ngOnInit(): void {
+    this.usuarioActual = this.authService.currentUser;
     this.cargarCursos();
     this.cargarTrabajadores();
     this.cargarInscripciones();
@@ -48,7 +62,16 @@ export class CursosComponent implements OnInit {
 
   cargarTrabajadores(): void {
     this.trabajadoresService.getTrabajadores().subscribe({
-      next: resp => (this.trabajadores = resp.data || []),
+      next: resp => {
+        const todos: Trabajador[] = resp.data || [];
+        if (this.usuarioActual?.seccion?.id_seccion) {
+          this.trabajadores = todos.filter(t => t.id_seccion === this.usuarioActual!.seccion.id_seccion);
+        } else if (this.usuarioActual?.seccion?.estado) {
+          this.trabajadores = todos.filter(t => t.seccion?.estado === this.usuarioActual!.seccion.estado);
+        } else {
+          this.trabajadores = todos;
+        }
+      },
       error: () => (this.trabajadores = [])
     });
   }
@@ -60,10 +83,9 @@ export class CursosComponent implements OnInit {
     });
   }
 
-    trabajadoresDelCurso(id_curso: number): TrabajadorCurso[] {
+  trabajadoresDelCurso(id_curso: number): TrabajadorCurso[] {
     return this.inscripciones.filter(i => i.id_curso === id_curso);
   }
-
 
   abrirDetalle(curso: Curso) {
     this.cursoSeleccionado = curso;
@@ -73,9 +95,10 @@ export class CursosComponent implements OnInit {
 
   abrirAgregarTrabajador(curso: Curso) {
     this.cursoSeleccionado = curso;
-    this.trabajadorAgregar = '';
+    this.trabajadoresAgregar = [];
     this.filtroBusqueda = '';
     this.filtroSeccion = '';
+    this.archivoInvitacion = null;
     const modalEl = document.getElementById('agregarModal');
     if (modalEl) (window as any).bootstrap?.Modal.getOrCreateInstance(modalEl).show();
   }
@@ -97,15 +120,35 @@ export class CursosComponent implements OnInit {
       });
   }
 
-  agregarTrabajador() {
-    if (!this.trabajadorAgregar || !this.cursoSeleccionado) return;
-    const formData = new FormData();
-    formData.append('id_trabajador', String(this.trabajadorAgregar));
-    formData.append('id_curso', String(this.cursoSeleccionado.id_curso));
-    formData.append('tipo_documento', 'INVITACION_CURSO');
-    this.trabajadoresCursosService.crearInscripcionAdmin(formData).subscribe({
+  toggleTrabajador(id: number, event: any) {
+    if (event.target.checked) {
+      if (!this.trabajadoresAgregar.includes(id)) {
+        this.trabajadoresAgregar.push(id);
+      }
+    } else {
+      this.trabajadoresAgregar = this.trabajadoresAgregar.filter(t => t !== id);
+    }
+  }
+
+  agregarTrabajadores() {
+    if (this.trabajadoresAgregar.length === 0 || !this.cursoSeleccionado) return;
+    if (!this.archivoInvitacion) {
+      alert('Debes subir la invitación del curso.');
+      return;
+    }
+    const peticiones = this.trabajadoresAgregar.map(id => {
+      const formData = new FormData();
+      formData.append('id_trabajador', String(id));
+      formData.append('id_curso', String(this.cursoSeleccionado!.id_curso));
+      formData.append('tipo_documento', 'INVITACION_CURSO');
+      formData.append('documento', this.archivoInvitacion!);
+      return this.trabajadoresCursosService.crearInscripcionAdmin(formData);
+    });
+
+    forkJoin(peticiones).subscribe({
       next: () => {
         this.cargarInscripciones();
+        this.archivoInvitacion = null;
         const modalEl = document.getElementById('agregarModal');
         if (modalEl) (window as any).bootstrap?.Modal.getInstance(modalEl)?.hide();
       },
@@ -116,6 +159,10 @@ export class CursosComponent implements OnInit {
   prepararNuevoCurso() {
     this.nuevoCurso = { codigo_curso: '', nombre_curso: '', horas_duracion: 1 };
     this.archivoConstancia = null;
+  }
+
+  onInvSelected(event: any) {
+    this.archivoInvitacion = event.target.files[0];
   }
 
   onFileSelected(event: any) {
@@ -156,6 +203,51 @@ export class CursosComponent implements OnInit {
     this.trabajadoresCursosService.eliminarInscripcion(id).subscribe(() => {
       this.cargarInscripciones();
     });
+  }
+
+  abrirEditarInscripcion(ins: TrabajadorCurso) {
+    this.inscripcionEditar = ins;
+    this.editCalificacion = ins.calificacion || '';
+    this.editCompletado = !!ins.completado;
+    this.docArchivo = null;
+    this.docTipo = 'CONCLUSION_CURSO';
+    const modalEl = document.getElementById('editarModal');
+    if (modalEl) (window as any).bootstrap?.Modal.getOrCreateInstance(modalEl).show();
+  }
+
+  actualizarInscripcion() {
+    if (!this.inscripcionEditar) return;
+    const data: any = { calificacion: this.editCalificacion, completado: this.editCompletado };
+    this.trabajadoresCursosService
+      .actualizarInscripcionAdmin(this.inscripcionEditar.id_trabajador_curso, data)
+      .subscribe({
+        next: () => {
+          this.cargarInscripciones();
+          const modalEl = document.getElementById('editarModal');
+          if (modalEl) (window as any).bootstrap?.Modal.getInstance(modalEl)?.hide();
+        },
+        error: () => alert('No se pudo actualizar la inscripción')
+      });
+  }
+
+  onDocSelected(event: any) {
+    this.docArchivo = event.target.files[0];
+  }
+
+  subirDocumento() {
+    if (!this.inscripcionEditar || !this.docArchivo) return;
+    const form = new FormData();
+    form.append('tipo_documento', this.docTipo);
+    form.append('documento', this.docArchivo);
+    this.trabajadoresCursosService
+      .subirDocumento(this.inscripcionEditar.id_trabajador_curso, form)
+      .subscribe({
+        next: () => {
+          this.cargarInscripciones();
+          this.docArchivo = null;
+        },
+        error: () => alert('No se pudo subir el documento')
+      });
   }
 
   eliminarCursoPassword(curso: Curso) {

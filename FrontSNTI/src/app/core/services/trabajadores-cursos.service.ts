@@ -28,4 +28,12 @@ export class TrabajadoresCursosService {
   misInscripciones(): Observable<{ success: boolean; data: TrabajadorCurso[] }> {
     return this.http.get<{ success: boolean; data: TrabajadorCurso[] }>(`${this.apiUrl}/mis-cursos`);
   }
+
+  subirDocumento(id: number, formData: FormData) {
+    return this.http.patch(`${this.apiUrl}/${id}/documento`, formData);
+  }
+
+  descargarDocumento(id: number, tipo: string): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/${id}/descargar/${tipo}`, { responseType: 'blob' });
+  }
 }

@@ -65,6 +65,23 @@ const crearCurso = async (req, res) => {
   const { codigo_curso, nombre_curso, horas_duracion, estatus, tipo_documento_curso } = req.body;
   const { originalname, filename, path: filePath, size, mimetype } = req.file;
 
+  // Verificar duplicados antes de procesar el archivo
+  try {
+    const codigoExistente = await prisma.cursos.findUnique({ where: { codigo_curso } });
+    if (codigoExistente) {
+      await safeUnlink(filePath);
+      return res.status(409).json({ success: false, message: 'El código del curso ya existe.' });
+    }
+    const nombreExistente = await prisma.cursos.findFirst({ where: { nombre_curso } });
+    if (nombreExistente) {
+      await safeUnlink(filePath);
+      return res.status(409).json({ success: false, message: 'El nombre del curso ya existe.' });
+    }
+  } catch (err) {
+    if (req.file) await safeUnlink(filePath);
+    return res.status(500).json({ success: false, message: 'Error al verificar duplicados.', error: err.message });
+  }
+  
   // Calcular hash del archivo
   let hash_archivo;
   try {
@@ -298,7 +315,8 @@ const eliminarCursoConPassword = async (req, res) => {
     const bcrypt = require('bcrypt');
     const valid = await bcrypt.compare(password, admin.password_hash);
     if (!valid) {
-      return res.status(401).json({ success: false, message: 'Contraseña incorrecta.' });
+      // Usar 403 para no gatillar los interceptores de token inválido en el front
+      return res.status(403).json({ success: false, message: 'Contraseña incorrecta.' });
     }
     // Reutilizar la lógica de eliminación existente
     return eliminarCurso(req, res);

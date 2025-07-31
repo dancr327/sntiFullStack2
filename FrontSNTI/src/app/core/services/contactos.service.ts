@@ -12,4 +12,15 @@ export class ContactosService {
   getContactos(): Observable<{ success: boolean; data: Contacto[] }> {
     return this.http.get<{ success: boolean; data: Contacto[] }>(this.apiUrl);
   }
+  crearContacto(contacto: Partial<Contacto>) {
+    return this.http.post(this.apiUrl, contacto);
+  }
+
+  actualizarContacto(id: number, contacto: Partial<Contacto>) {
+    return this.http.patch(`${this.apiUrl}/${id}`, contacto);
+  }
+
+  eliminarContacto(id: number) {
+    return this.http.delete(`${this.apiUrl}/${id}`);
+  }
 }

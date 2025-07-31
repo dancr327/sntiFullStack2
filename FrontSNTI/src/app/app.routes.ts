@@ -24,6 +24,7 @@ export const routes: Routes = [
 
     {path: 'adminsanciones', loadComponent: () => import('./components/admin/sanciones/sanciones.component').then(m => m.SancionesComponent)},
     {path: 'admincursos', loadComponent: () => import('./components/admin/cursos/cursos.component').then(m => m.CursosComponent)},
+    {path: 'admincontactos', loadComponent: () => import('./components/admin/contactos/contactos.component').then(m => m.ContactosComponent)},
     {path: 'adminpermisos', loadComponent: () => import('./components/admin/permisos/permisos.component').then(m => m.PermisosComponent)},
     {path: 'adminhijos', loadComponent: () => import('./components/admin/hijos/hijos.component').then(m => m.HijosComponent)},
     {path: 'adminsecciones', loadComponent: () => import('./components/admin/secciones-sindicales/secciones-sindicales.component').then(m => m.SeccionesSindicalesComponent)},
